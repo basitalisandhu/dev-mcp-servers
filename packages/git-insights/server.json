@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.basitalisandhu/git-insights",
+  "name": "io.github.basitalisandhu/mcp-git-insights",
   "title": "Git Insights",
   "description": "Read-only git statistics for a local repository: log, blame ownership, churn, authors, large files.",
   "repository": {
@@ -8,15 +8,13 @@
     "source": "github",
     "subfolder": "packages/git-insights"
   },
-  "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/git-insights#readme",
+  "websiteUrl": "https://basitalisandhu.github.io/dev-mcp-servers/",
   "version": "0.1.1",
   "packages": [
     {
-      "registryType": "npm",
-      "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "@basitalisandhu/mcp-git-insights",
-      "version": "0.1.1",
-      "runtimeHint": "npx",
+      "registryType": "oci",
+      "identifier": "ghcr.io/basitalisandhu/mcp-git-insights:0.1.1",
+      "runtimeHint": "docker",
       "transport": {
         "type": "stdio"
       }

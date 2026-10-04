@@ -1,7 +1,7 @@
 {
   "name": "@basitalisandhu/mcp-security-headers",
   "version": "0.1.1",
-  "mcpName": "io.github.basitalisandhu/security-headers",
+  "mcpName": "io.github.basitalisandhu/mcp-security-headers",
   "description": "MCP server that fetches a URL's response headers and grades CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy and Permissions-Policy with explanations.",
   "license": "MIT",
   "author": "Muhammad Basit Ali",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.basitalisandhu/cron-tools",
+  "name": "io.github.basitalisandhu/mcp-cron-tools",
   "title": "Cron Tools",
   "description": "Parse, explain and validate 5-field cron expressions and list upcoming runs in a time zone.",
   "repository": {
@@ -8,15 +8,13 @@
     "source": "github",
     "subfolder": "packages/cron-tools"
   },
-  "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/cron-tools#readme",
+  "websiteUrl": "https://basitalisandhu.github.io/dev-mcp-servers/",
   "version": "0.1.1",
   "packages": [
     {
-      "registryType": "npm",
-      "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "@basitalisandhu/mcp-cron-tools",
-      "version": "0.1.1",
-      "runtimeHint": "npx",
+      "registryType": "oci",
+      "identifier": "ghcr.io/basitalisandhu/mcp-cron-tools:0.1.1",
+      "runtimeHint": "docker",
       "transport": {
         "type": "stdio"
       }

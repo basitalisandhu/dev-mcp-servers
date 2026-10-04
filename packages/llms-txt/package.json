@@ -1,7 +1,7 @@
 {
   "name": "@basitalisandhu/mcp-llms-txt",
   "version": "0.1.1",
-  "mcpName": "io.github.basitalisandhu/llms-txt",
+  "mcpName": "io.github.basitalisandhu/mcp-llms-txt",
   "description": "MCP server that generates llms.txt from a directory of Markdown files or a local sitemap and checks an existing llms.txt against the convention.",
   "license": "MIT",
   "author": "Muhammad Basit Ali",

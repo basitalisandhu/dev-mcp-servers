@@ -37,7 +37,7 @@ LABEL org.opencontainers.image.title="mcp-${SERVER}" \
       org.opencontainers.image.url="https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/${SERVER}" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.version="${VERSION}" \
-      io.modelcontextprotocol.server.name="io.github.basitalisandhu/${SERVER}"
+      io.modelcontextprotocol.server.name="io.github.basitalisandhu/mcp-${SERVER}"
 # git-insights shells out to git. Mount the repository at /repo; only that tree is marked safe for the
 # container's non-root user, whose uid usually differs from the owner of the mounted files.
 RUN if [ "${SERVER}" = "git-insights" ]; then \

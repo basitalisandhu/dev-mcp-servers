@@ -8,7 +8,16 @@ Nothing yet.
 
 ## [0.1.1] - 2026-10-06
 
+### Added
+
+- Every server is published to the official MCP registry (registry.modelcontextprotocol.io) on each tag as `io.github.basitalisandhu/mcp-<name>`, by a new `publish-mcp-registry` job in `publish-github-packages.yml` that logs in with GitHub OIDC (no secret) after the images are pushed, using a pinned, checksum-verified `mcp-publisher` 1.8.1. Versions already in the registry are skipped.
+
 ### Changed
+
+- Registry names are now `io.github.basitalisandhu/mcp-<name>` (was `io.github.basitalisandhu/<name>`, never published) in `server.json`, `mcpName` and the image label.
+- Each `server.json` lists one OCI package, `ghcr.io/basitalisandhu/mcp-<name>:<version>`, instead of the npm package: the registry only verifies npm packages on registry.npmjs.org. `websiteUrl` is the project site.
+- Each image carries the label and annotation `io.modelcontextprotocol.server.name`, which the registry checks to verify ownership.
+- `npm run check:server-json` enforces the registry rules (name, `$schema`, OCI identifier and tag, no `version` on OCI entries, description length, `websiteUrl`, `repository`), with tests in `scripts/check-server-json.test.mjs`.
 
 - Removed the umbrella branding; this project stands alone and links its sibling repositories directly.
 

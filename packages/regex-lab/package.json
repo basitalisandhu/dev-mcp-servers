@@ -1,7 +1,7 @@
 {
   "name": "@basitalisandhu/mcp-regex-lab",
   "version": "0.1.1",
-  "mcpName": "io.github.basitalisandhu/regex-lab",
+  "mcpName": "io.github.basitalisandhu/mcp-regex-lab",
   "description": "MCP server that tests regular expressions against samples in a timeout-guarded worker, explains patterns and detects catastrophic backtracking.",
   "license": "MIT",
   "author": "Muhammad Basit Ali",
