@@ -13,7 +13,7 @@ import { z } from "zod";
 import { DRAFTS, diffSchemas, inferSchema, validate } from "./schema.js";
 
 export const SERVER_NAME = "json-schema-tools";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.1.1";
 const MAX_JSON = 2 * 1024 * 1024;
 
 function json(value: unknown) {

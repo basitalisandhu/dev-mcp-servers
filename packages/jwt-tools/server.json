@@ -9,13 +9,13 @@
     "subfolder": "packages/jwt-tools"
   },
   "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/jwt-tools#readme",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@basitalisandhu/mcp-jwt-tools",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

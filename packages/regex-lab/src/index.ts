@@ -15,7 +15,7 @@ import { analyse } from "./redos.js";
 import { DEFAULT_TIMEOUT_MS, MAX_MATCHES_PER_SAMPLE, MAX_TIMEOUT_MS, probeRegex, runRegex } from "./runner.js";
 
 export const SERVER_NAME = "regex-lab";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.1.1";
 const MAX_PATTERN = 2000;
 const MAX_SAMPLE = 20_000;
 const MAX_SAMPLES = 50;

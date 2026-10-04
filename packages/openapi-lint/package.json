@@ -1,6 +1,6 @@
 {
   "name": "@basitalisandhu/mcp-openapi-lint",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "mcpName": "io.github.basitalisandhu/openapi-lint",
   "description": "MCP server that loads an OpenAPI 3.x document and lints it for missing security schemes, operations without responses, unversioned paths and missing descriptions.",
   "license": "MIT",

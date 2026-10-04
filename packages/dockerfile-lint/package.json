@@ -1,6 +1,6 @@
 {
   "name": "@basitalisandhu/mcp-dockerfile-lint",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "mcpName": "io.github.basitalisandhu/dockerfile-lint",
   "description": "MCP server that lints Dockerfiles for root users, latest tags, unpinned base images, secrets in ENV or ARG, missing HEALTHCHECK, apt without cleanup and ADD instead of COPY.",
   "license": "MIT",

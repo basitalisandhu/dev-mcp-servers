@@ -1,6 +1,6 @@
 {
   "name": "@basitalisandhu/mcp-cron-tools",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "mcpName": "io.github.basitalisandhu/cron-tools",
   "description": "MCP server that parses 5-field cron expressions, explains them in English, validates them and lists upcoming runs in a timezone.",
   "license": "MIT",

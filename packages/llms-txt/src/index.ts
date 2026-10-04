@@ -14,7 +14,7 @@ import { z } from "zod";
 import { MAX_FILES, check, collectMarkdown, entriesFromSitemap, parseSitemap, render } from "./llms.js";
 
 export const SERVER_NAME = "llms-txt";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.1.1";
 const MAX_TEXT = 2 * 1024 * 1024;
 
 function json(value: unknown) {
