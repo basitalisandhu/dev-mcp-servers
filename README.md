@@ -122,7 +122,7 @@ To list the servers in the [MCP registry](https://github.com/modelcontextprotoco
 ## Related
 
 - [agent-security-skills](https://github.com/basitalisandhu/agent-security-skills): Claude Code plugin and skill pack for securing LLM agents, including an MCP server over the AI agent incident dataset.
-- [hisar](https://github.com/basitalisandhu/hisar): policy and control plane for agent tool calls.
+- [masoon](https://github.com/basitalisandhu/masoon): policy and control plane for agent tool calls.
 
 ## Licence
 
