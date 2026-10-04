@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Changed
+
+- Removed the umbrella branding; this project stands alone and links its sibling repositories directly.
+
 ## [0.1.0] - 2026-10-04
 
 First release. Every server is published to two registries on GitHub Packages, using only the workflow's `GITHUB_TOKEN`:
