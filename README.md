@@ -125,6 +125,17 @@ gh attestation verify oci://ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.1 --owner b
 
 To build an image locally from a checkout: `docker build --build-arg SERVER=jwt-tools -t mcp-jwt-tools .`
 
+## MCP registry
+
+Each server is listed in the official [MCP registry](https://registry.modelcontextprotocol.io) as `io.github.basitalisandhu/mcp-<name>`, for example `io.github.basitalisandhu/mcp-jwt-tools`. The listing points at the signed GHCR image for that version (`ghcr.io/basitalisandhu/mcp-<name>:<version>`, stdio transport), so a client or catalogue that reads the registry installs a server by running that image with `docker run --rm -i`, exactly as under Container images above. Look a server up directly:
+
+```bash
+curl -s 'https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.basitalisandhu/mcp-'
+curl -s 'https://registry.modelcontextprotocol.io/v0.1/servers/io.github.basitalisandhu%2Fmcp-jwt-tools/versions/latest'
+```
+
+The registry lists the container images rather than the npm packages because it verifies npm ownership only on registry.npmjs.org, and these packages are on GitHub Packages. It verifies the images by pulling each one anonymously and checking its `io.modelcontextprotocol.server.name` label, which the `Dockerfile` and the publish workflow set to the server's registry name.
+
 ## Security posture
 
 - **Stdio only.** No server opens a port. Each one is a child process of your MCP client and exits with it.
@@ -148,7 +159,7 @@ packages/<name>/
   package.json     @basitalisandhu/mcp-<name>, bin, mcpName
   server.json      MCP registry metadata (checked against the schema in CI)
   README.md        tools, install, what it touches
-scripts/check-server-json.mjs   offline validation of every server.json
+scripts/check-server-json.mjs   offline validation of every server.json against the MCP registry rules
 .github/workflows/ci.yml        build and test every workspace on Node 20 and 22
 .github/workflows/publish-github-packages.yml   npm packages and GHCR images on a version tag
 .github/workflows/release.yml   npmjs.com publish with provenance (off until NPMJS_PUBLISH is set)
@@ -168,7 +179,7 @@ Tests run offline: network-facing servers are tested against a fake `fetch`, and
 
 ## Adding a server
 
-1. Copy the closest existing package to `packages/<name>` and rename it: `name` is `@basitalisandhu/mcp-<name>`, `bin` is `mcp-<name>`, `mcpName` is `io.github.basitalisandhu/<name>`, and `server.json` repeats the name, version, identifier and `packages/<name>` subfolder.
+1. Copy the closest existing package to `packages/<name>` and rename it: `name` is `@basitalisandhu/mcp-<name>`, `bin` is `mcp-<name>`, `mcpName` is `io.github.basitalisandhu/mcp-<name>`, and `server.json` repeats that name and the version, with one OCI package `ghcr.io/basitalisandhu/mcp-<name>:<version>` and the `packages/<name>` subfolder.
 2. Keep the pattern: `createServer()` returns an `McpServer`; `main()` connects a `StdioServerTransport` only when the file is run directly; every tool has a zod `inputSchema` with limits, `annotations`, and a description that states what it does, what it returns and what it refuses.
 3. Keep logic in separate modules so it can be tested without MCP, and write `test/*.test.mjs` that connect over `InMemoryTransport` and call every tool at least once, including an invalid input.
 4. No network unless the tool's purpose is network, and then: one documented host, an allowlist check before the request, `AbortSignal.timeout`, a response size cap, and a fake `fetch` in tests.
@@ -186,6 +197,7 @@ git tag -a v0.1.1 -m "0.1.1" && git push origin v0.1.1
 
 - publishes each workspace to GitHub Packages npm with the workflow's `GITHUB_TOKEN` (a version that already exists is skipped, so a re-run is safe);
 - builds and pushes `ghcr.io/basitalisandhu/mcp-<server>:<version>` and `:latest` for every server, generates an SPDX SBOM, records a build provenance attestation and signs the image digest with cosign;
+- publishes every `server.json` to the MCP registry, after the images are pushed: it installs a pinned, checksum-verified `mcp-publisher`, logs in with `mcp-publisher login github-oidc` (the job's `id-token: write` permission; no secret), sets the version from the tag and skips versions the registry already has, so a re-run is safe;
 - creates the GitHub release for the tag with generated notes and the SBOMs attached.
 
 No secret is needed. Pull requests that change the Dockerfile, the workflow or a `package.json` run the same build as a dry run.
@@ -197,7 +209,7 @@ No secret is needed. Pull requests that change the Dockerfile, the workflow or a
 
 It passes `--registry https://registry.npmjs.org`, which overrides the GitHub Packages registry in each `publishConfig`. Provenance requires the workflow to run on GitHub-hosted runners from the public repository.
 
-To list the servers in the [MCP registry](https://github.com/modelcontextprotocol/registry), each `server.json` is already in the registry's format and each `package.json` carries the matching `mcpName`; publish with the registry's `mcp-publisher` CLI from the package directory after the npm release.
+Once npmjs.com publishing is on, an npm entry (`registryType: npm`, `registryBaseUrl: https://registry.npmjs.org`) can be added back to each `server.json`; each `package.json` already carries the matching `mcpName` that the registry checks.
 
 ## Related
 

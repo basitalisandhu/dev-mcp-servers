@@ -1,7 +1,7 @@
 {
   "name": "@basitalisandhu/mcp-git-insights",
   "version": "0.1.1",
-  "mcpName": "io.github.basitalisandhu/git-insights",
+  "mcpName": "io.github.basitalisandhu/mcp-git-insights",
   "description": "MCP server that runs read-only, allowlisted git commands in a repository: log, blame summary, churn per file, authors and large files.",
   "license": "MIT",
   "author": "Muhammad Basit Ali",

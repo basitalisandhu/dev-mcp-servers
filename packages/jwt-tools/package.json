@@ -1,7 +1,7 @@
 {
   "name": "@basitalisandhu/mcp-jwt-tools",
   "version": "0.1.1",
-  "mcpName": "io.github.basitalisandhu/jwt-tools",
+  "mcpName": "io.github.basitalisandhu/mcp-jwt-tools",
   "description": "MCP server that decodes JWTs without verifying, flags unsafe algorithms and claims, and verifies HS256 or RS256 signatures when a key is supplied.",
   "license": "MIT",
   "author": "Muhammad Basit Ali",

@@ -4,6 +4,8 @@ name: publish-github-packages
 #   npm:        @basitalisandhu/mcp-<server> to https://npm.pkg.github.com
 #   containers: ghcr.io/basitalisandhu/mcp-<server>:<version> and :latest (linux/amd64, linux/arm64),
 #               each with an SPDX SBOM, a build provenance attestation and a keyless cosign signature
+#   MCP registry: io.github.basitalisandhu/mcp-<server> on registry.modelcontextprotocol.io, as an OCI package
+#               pointing at the GHCR image (GitHub OIDC login, no secret; tags only)
 # then creates the GitHub Release for the tag with generated notes and the SBOMs attached.
 #
 # Pull requests that touch the packaging run the same build as a dry run (nothing is pushed).
@@ -20,6 +22,8 @@ on:
       - ".dockerignore"
       - ".github/workflows/publish-github-packages.yml"
       - "packages/*/package.json"
+      - "packages/*/server.json"
+      - "scripts/check-server-json.mjs"
   workflow_dispatch:
     inputs:
       publish:
@@ -168,10 +172,15 @@ jobs:
             org.opencontainers.image.licenses=MIT
             org.opencontainers.image.version=${{ env.VERSION }}
             org.opencontainers.image.revision=${{ github.sha }}
+            io.modelcontextprotocol.server.name=io.github.basitalisandhu/mcp-${{ matrix.server }}
+          # The MCP registry checks ownership by reading the io.modelcontextprotocol.server.name label from the
+          # image config (Dockerfile LABEL and labels above); the annotations repeat it on the index and manifests.
           annotations: |
             index:org.opencontainers.image.description=${{ steps.desc.outputs.text }}
             index:org.opencontainers.image.source=https://github.com/${{ github.repository }}
             index:org.opencontainers.image.licenses=MIT
+            index:io.modelcontextprotocol.server.name=io.github.basitalisandhu/mcp-${{ matrix.server }}
+            manifest:io.modelcontextprotocol.server.name=io.github.basitalisandhu/mcp-${{ matrix.server }}
           # Provenance comes from attest-build-provenance below; keep the image index free of extra manifests.
           provenance: false
           sbom: false
@@ -210,6 +219,73 @@ jobs:
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: cosign sign --yes "${IMAGE}@${DIGEST}"
+
+  publish-mcp-registry:
+    name: Publish to the MCP registry
+    # Runs after every image is pushed: the registry pulls each image anonymously and reads its
+    # io.modelcontextprotocol.server.name label. On pull requests it only validates the server.json files.
+    needs: [build-test, publish-containers]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VERSION: ${{ needs.build-test.outputs.version }}
+      MCP_PUBLISHER_VERSION: "1.8.1"
+      # sha256 of mcp-publisher_linux_amd64.tar.gz from registry_1.8.1_checksums.txt of that release
+      MCP_PUBLISHER_SHA256: a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc
+      REGISTRY_URL: https://registry.modelcontextprotocol.io
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install mcp-publisher (pinned, checksum verified)
+        run: |
+          curl -fsSL -o mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          echo "${MCP_PUBLISHER_SHA256}  mcp-publisher.tar.gz" | sha256sum -c -
+          tar -xzf mcp-publisher.tar.gz mcp-publisher
+          ./mcp-publisher --help | head -1
+      - name: Set the version from the tag in every server.json
+        run: |
+          for f in packages/*/server.json; do
+            jq --arg v "$VERSION" '.version = $v | .packages |= map(if .registryType == "oci" then .identifier = (.identifier | sub(":[^:/]+$"; "")) + ":" + $v else . end)' \
+              "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+          done
+      - name: Validate every server.json against the registry
+        run: |
+          for f in packages/*/server.json; do
+            echo "== $f"
+            ./mcp-publisher validate "$f"
+          done
+      - name: Log in with GitHub OIDC
+        if: github.ref_type == 'tag'
+        run: ./mcp-publisher login github-oidc
+      - name: Publish each server, skipping versions already in the registry
+        if: github.ref_type == 'tag'
+        run: |
+          failed=0
+          for f in packages/*/server.json; do
+            NAME=$(jq -r .name "$f")
+            ENCODED=$(jq -rn --arg n "$NAME" '$n | @uri')
+            CODE=$(curl -sL -o /dev/null -w '%{http_code}' "$REGISTRY_URL/v0.1/servers/$ENCODED/versions/$VERSION" || true)
+            if [ "$CODE" = "200" ]; then
+              echo "$NAME@$VERSION is already in the registry, skipping"
+              continue
+            fi
+            if OUT=$(./mcp-publisher publish "$f" 2>&1); then
+              echo "$OUT"
+              echo "Published $NAME@$VERSION"
+            elif echo "$OUT" | grep -qiE "duplicate version|already exists"; then
+              echo "$OUT"
+              echo "$NAME@$VERSION is already in the registry, skipping"
+            else
+              echo "$OUT"
+              echo "::error file=$f::publishing $NAME@$VERSION failed"
+              failed=1
+            fi
+          done
+          exit "$failed"
 
   release:
     name: GitHub Release

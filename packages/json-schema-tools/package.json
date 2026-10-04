@@ -1,7 +1,7 @@
 {
   "name": "@basitalisandhu/mcp-json-schema-tools",
   "version": "0.1.1",
-  "mcpName": "io.github.basitalisandhu/json-schema-tools",
+  "mcpName": "io.github.basitalisandhu/mcp-json-schema-tools",
   "description": "MCP server that validates JSON against a JSON Schema with Ajv, infers a schema from sample documents and diffs two schemas.",
   "license": "MIT",
   "author": "Muhammad Basit Ali",

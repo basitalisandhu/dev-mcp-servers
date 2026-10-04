@@ -18,9 +18,10 @@
   },
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm test --workspaces",
+    "test": "npm test --workspaces && npm run test:scripts",
     "clean": "node -e \"for (const d of require('fs').readdirSync('packages')) require('fs').rmSync('packages/'+d+'/dist', {recursive:true, force:true})\"",
-    "check:server-json": "node scripts/check-server-json.mjs"
+    "check:server-json": "node scripts/check-server-json.mjs",
+    "test:scripts": "node --test scripts/check-server-json.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
