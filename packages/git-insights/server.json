@@ -1,0 +1,25 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.basitalisandhu/git-insights",
+  "title": "Git Insights",
+  "description": "Read-only git statistics for a local repository: log, blame ownership, churn, authors, large files.",
+  "repository": {
+    "url": "https://github.com/basitalisandhu/dev-mcp-servers",
+    "source": "github",
+    "subfolder": "packages/git-insights"
+  },
+  "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/git-insights#readme",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@basitalisandhu/mcp-git-insights",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

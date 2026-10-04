@@ -1,0 +1,25 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.basitalisandhu/security-headers",
+  "title": "Security Headers",
+  "description": "Fetch a URL's response headers and grade CSP, HSTS, X-Frame-Options and related security headers.",
+  "repository": {
+    "url": "https://github.com/basitalisandhu/dev-mcp-servers",
+    "source": "github",
+    "subfolder": "packages/security-headers"
+  },
+  "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/security-headers#readme",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@basitalisandhu/mcp-security-headers",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

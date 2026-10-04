@@ -1,0 +1,50 @@
+name: release
+
+# Publishes every workspace package to npm with provenance when a version tag is pushed.
+#
+# Authentication, pick one:
+#   1. Trusted publishing (recommended): on npmjs.com, for each @basitalisandhu/mcp-* package, add this
+#      repository and workflow file ("release.yml") as a trusted publisher. No token is needed; the
+#      `id-token: write` permission below lets npm verify the GitHub OIDC token. Trusted publishing
+#      needs npm 11.5.1 or newer, which the "Upgrade npm" step installs.
+#   2. A granular automation token stored as the repository secret NPM_TOKEN. The "Publish" step
+#      passes it as NODE_AUTH_TOKEN; with trusted publishing configured the secret can be left unset.
+#
+# Every package's version must already match the tag (for example tag v0.1.0 with "version": "0.1.0").
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build, test and publish all workspaces
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+      - name: Upgrade npm (trusted publishing needs 11.5.1 or newer)
+        run: npm install -g npm@latest && npm --version
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - name: Check that every package version matches the tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          for pkg in packages/*/package.json; do
+            V=$(node -p "require('./$pkg').version")
+            if [ "$V" != "$TAG" ]; then echo "$pkg has version $V, tag is $TAG"; exit 1; fi
+          done
+      - name: Publish every workspace with provenance
+        run: npm publish --workspaces --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

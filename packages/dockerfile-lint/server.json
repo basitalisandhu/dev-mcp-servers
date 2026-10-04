@@ -1,0 +1,25 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.basitalisandhu/dockerfile-lint",
+  "title": "Dockerfile Lint",
+  "description": "Lint Dockerfiles for root users, latest tags, secrets in ENV or ARG, missing HEALTHCHECK and more.",
+  "repository": {
+    "url": "https://github.com/basitalisandhu/dev-mcp-servers",
+    "source": "github",
+    "subfolder": "packages/dockerfile-lint"
+  },
+  "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/dockerfile-lint#readme",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@basitalisandhu/mcp-dockerfile-lint",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

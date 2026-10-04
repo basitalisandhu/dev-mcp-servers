@@ -1,0 +1,25 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.basitalisandhu/openapi-lint",
+  "title": "OpenAPI Lint",
+  "description": "Lint OpenAPI 3.x documents for missing security, responses, descriptions and versioning.",
+  "repository": {
+    "url": "https://github.com/basitalisandhu/dev-mcp-servers",
+    "source": "github",
+    "subfolder": "packages/openapi-lint"
+  },
+  "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/openapi-lint#readme",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@basitalisandhu/mcp-openapi-lint",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

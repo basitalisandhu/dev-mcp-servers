@@ -1,0 +1,25 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.basitalisandhu/jwt-tools",
+  "title": "JWT Tools",
+  "description": "Decode JWTs without verifying, flag risky algorithms and claims, verify HS256 or RS256 with a key.",
+  "repository": {
+    "url": "https://github.com/basitalisandhu/dev-mcp-servers",
+    "source": "github",
+    "subfolder": "packages/jwt-tools"
+  },
+  "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/jwt-tools#readme",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@basitalisandhu/mcp-jwt-tools",
+      "version": "0.1.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

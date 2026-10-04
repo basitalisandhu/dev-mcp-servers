@@ -1,0 +1,82 @@
+openapi: 3.0.3
+info:
+  title: Pet Store
+  version: 1.0.0
+  description: A small example API.
+servers:
+  - url: https://api.example.com/v1
+  - url: http://insecure.example.com
+tags:
+  - name: pets
+security:
+  - bearer: []
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+    unused:
+      type: apiKey
+      in: header
+      name: X-Key
+  parameters:
+    PetId:
+      name: petId
+      in: path
+      required: true
+      description: The pet identifier.
+      schema:
+        type: integer
+  responses:
+    NotFound:
+      description: Not found.
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      summary: List pets
+      tags: [pets]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A list of pets.
+    post:
+      operationId: createPet
+      tags: [animals]
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Created.
+  /pets/{petId}:
+    parameters:
+      - $ref: "#/components/parameters/PetId"
+    get:
+      operationId: getPet
+      summary: Get a pet
+      responses:
+        "200":
+          description: The pet.
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: listPets
+      summary: Delete a pet
+      deprecated: true
+      security:
+        - missingScheme: []
+      responses:
+        "404":
+          description: Not found.
+  /owners/{ownerId}:
+    get:
+      summary: Owner
+      responses: {}
