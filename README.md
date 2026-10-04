@@ -8,16 +8,16 @@ All servers are TypeScript on the official `@modelcontextprotocol/sdk`, speak st
 
 | Server | Purpose | Install |
 |---|---|---|
-| [osv-advisories](packages/osv-advisories) | Query OSV.dev for known vulnerabilities by package and version; scan `package-lock.json`, `requirements.txt`, `poetry.lock` and `go.sum` | `claude mcp add osv-advisories -- npx -y @basitalisandhu/mcp-osv-advisories@0.1.0` |
-| [security-headers](packages/security-headers) | Fetch a public URL's response headers and grade CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy and cookies | `claude mcp add security-headers -- npx -y @basitalisandhu/mcp-security-headers@0.1.0` |
-| [jwt-tools](packages/jwt-tools) | Decode a JWT without verifying it, flag `alg: none`, expiry and missing claims, verify HS256/RS256 with a key, sign test tokens | `claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.1.0` |
-| [regex-lab](packages/regex-lab) | Test a regex against samples in a timeout-guarded worker, explain it, detect catastrophic backtracking | `claude mcp add regex-lab -- npx -y @basitalisandhu/mcp-regex-lab@0.1.0` |
-| [cron-tools](packages/cron-tools) | Parse, explain and validate 5-field cron, list the next runs in a time zone | `claude mcp add cron-tools -- npx -y @basitalisandhu/mcp-cron-tools@0.1.0` |
-| [json-schema-tools](packages/json-schema-tools) | Validate JSON with Ajv, infer a schema from samples, diff two schemas with a compatibility verdict | `claude mcp add json-schema-tools -- npx -y @basitalisandhu/mcp-json-schema-tools@0.1.0` |
-| [openapi-lint](packages/openapi-lint) | Lint OpenAPI 3.x for missing security, responses, descriptions and versioning; list operations | `claude mcp add openapi-lint -- npx -y @basitalisandhu/mcp-openapi-lint@0.1.0` |
-| [dockerfile-lint](packages/dockerfile-lint) | Lint Dockerfiles for root users, `latest` tags, secrets in `ENV`/`ARG`, missing `HEALTHCHECK`, apt without cleanup, `ADD` vs `COPY` | `claude mcp add dockerfile-lint -- npx -y @basitalisandhu/mcp-dockerfile-lint@0.1.0` |
-| [git-insights](packages/git-insights) | Read-only git statistics: log, blame ownership, churn, authors, large files | `claude mcp add git-insights -- npx -y @basitalisandhu/mcp-git-insights@0.1.0` |
-| [llms-txt](packages/llms-txt) | Generate `llms.txt` from local Markdown or a sitemap, check an existing one | `claude mcp add llms-txt -- npx -y @basitalisandhu/mcp-llms-txt@0.1.0` |
+| [osv-advisories](packages/osv-advisories) | Query OSV.dev for known vulnerabilities by package and version; scan `package-lock.json`, `requirements.txt`, `poetry.lock` and `go.sum` | `claude mcp add osv-advisories -- npx -y @basitalisandhu/mcp-osv-advisories@0.1.1` |
+| [security-headers](packages/security-headers) | Fetch a public URL's response headers and grade CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy and cookies | `claude mcp add security-headers -- npx -y @basitalisandhu/mcp-security-headers@0.1.1` |
+| [jwt-tools](packages/jwt-tools) | Decode a JWT without verifying it, flag `alg: none`, expiry and missing claims, verify HS256/RS256 with a key, sign test tokens | `claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.1.1` |
+| [regex-lab](packages/regex-lab) | Test a regex against samples in a timeout-guarded worker, explain it, detect catastrophic backtracking | `claude mcp add regex-lab -- npx -y @basitalisandhu/mcp-regex-lab@0.1.1` |
+| [cron-tools](packages/cron-tools) | Parse, explain and validate 5-field cron, list the next runs in a time zone | `claude mcp add cron-tools -- npx -y @basitalisandhu/mcp-cron-tools@0.1.1` |
+| [json-schema-tools](packages/json-schema-tools) | Validate JSON with Ajv, infer a schema from samples, diff two schemas with a compatibility verdict | `claude mcp add json-schema-tools -- npx -y @basitalisandhu/mcp-json-schema-tools@0.1.1` |
+| [openapi-lint](packages/openapi-lint) | Lint OpenAPI 3.x for missing security, responses, descriptions and versioning; list operations | `claude mcp add openapi-lint -- npx -y @basitalisandhu/mcp-openapi-lint@0.1.1` |
+| [dockerfile-lint](packages/dockerfile-lint) | Lint Dockerfiles for root users, `latest` tags, secrets in `ENV`/`ARG`, missing `HEALTHCHECK`, apt without cleanup, `ADD` vs `COPY` | `claude mcp add dockerfile-lint -- npx -y @basitalisandhu/mcp-dockerfile-lint@0.1.1` |
+| [git-insights](packages/git-insights) | Read-only git statistics: log, blame ownership, churn, authors, large files | `claude mcp add git-insights -- npx -y @basitalisandhu/mcp-git-insights@0.1.1` |
+| [llms-txt](packages/llms-txt) | Generate `llms.txt` from local Markdown or a sitemap, check an existing one | `claude mcp add llms-txt -- npx -y @basitalisandhu/mcp-llms-txt@0.1.1` |
 
 Every package README lists its tools with inputs and outputs, the exact `claude mcp add` command, a `.mcp.json` snippet, and what the server touches on disk and on the network.
 
@@ -26,7 +26,7 @@ Every package README lists its tools with inputs and outputs, the exact `claude 
 With Claude Code:
 
 ```bash
-claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.1.0
+claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.1.1
 claude mcp list
 ```
 
@@ -35,8 +35,8 @@ Add `-s user` to install for every project rather than the current one. For clie
 ```json
 {
   "mcpServers": {
-    "jwt-tools": { "command": "npx", "args": ["-y", "@basitalisandhu/mcp-jwt-tools@0.1.0"] },
-    "osv-advisories": { "command": "npx", "args": ["-y", "@basitalisandhu/mcp-osv-advisories@0.1.0"] }
+    "jwt-tools": { "command": "npx", "args": ["-y", "@basitalisandhu/mcp-jwt-tools@0.1.1"] },
+    "osv-advisories": { "command": "npx", "args": ["-y", "@basitalisandhu/mcp-osv-advisories@0.1.1"] }
   }
 }
 ```
@@ -61,16 +61,16 @@ Every release is published in two places by `publish-github-packages.yml`: an np
 
 | Server | npm (GitHub Packages) | Container (GHCR) |
 |---|---|---|
-| osv-advisories | `npm i -g @basitalisandhu/mcp-osv-advisories@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-osv-advisories:0.1.0` |
-| security-headers | `npm i -g @basitalisandhu/mcp-security-headers@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-security-headers:0.1.0` |
-| jwt-tools | `npm i -g @basitalisandhu/mcp-jwt-tools@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0` |
-| regex-lab | `npm i -g @basitalisandhu/mcp-regex-lab@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-regex-lab:0.1.0` |
-| cron-tools | `npm i -g @basitalisandhu/mcp-cron-tools@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-cron-tools:0.1.0` |
-| json-schema-tools | `npm i -g @basitalisandhu/mcp-json-schema-tools@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-json-schema-tools:0.1.0` |
-| openapi-lint | `npm i -g @basitalisandhu/mcp-openapi-lint@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-openapi-lint:0.1.0` |
-| dockerfile-lint | `npm i -g @basitalisandhu/mcp-dockerfile-lint@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-dockerfile-lint:0.1.0` |
-| git-insights | `npm i -g @basitalisandhu/mcp-git-insights@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-git-insights:0.1.0` |
-| llms-txt | `npm i -g @basitalisandhu/mcp-llms-txt@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-llms-txt:0.1.0` |
+| osv-advisories | `npm i -g @basitalisandhu/mcp-osv-advisories@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-osv-advisories:0.1.1` |
+| security-headers | `npm i -g @basitalisandhu/mcp-security-headers@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-security-headers:0.1.1` |
+| jwt-tools | `npm i -g @basitalisandhu/mcp-jwt-tools@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.1` |
+| regex-lab | `npm i -g @basitalisandhu/mcp-regex-lab@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-regex-lab:0.1.1` |
+| cron-tools | `npm i -g @basitalisandhu/mcp-cron-tools@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-cron-tools:0.1.1` |
+| json-schema-tools | `npm i -g @basitalisandhu/mcp-json-schema-tools@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-json-schema-tools:0.1.1` |
+| openapi-lint | `npm i -g @basitalisandhu/mcp-openapi-lint@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-openapi-lint:0.1.1` |
+| dockerfile-lint | `npm i -g @basitalisandhu/mcp-dockerfile-lint@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-dockerfile-lint:0.1.1` |
+| git-insights | `npm i -g @basitalisandhu/mcp-git-insights@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-git-insights:0.1.1` |
+| llms-txt | `npm i -g @basitalisandhu/mcp-llms-txt@0.1.1` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-llms-txt:0.1.1` |
 
 ### npm from GitHub Packages
 
@@ -84,7 +84,7 @@ Point the `@basitalisandhu` scope at GitHub Packages in `~/.npmrc`:
 GitHub's npm registry asks for a token even to install public packages. That is a GitHub limitation, not a setting of this repository: use a personal access token (classic) with the `read:packages` scope, exported as `GITHUB_TOKEN`. With that in place, install globally as in the table, or let the client start the server through `npx`:
 
 ```bash
-claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.1.0
+claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.1.1
 ```
 
 Each package installs a `mcp-<server>` command (for example `mcp-jwt-tools`) that speaks MCP on stdio.
@@ -96,7 +96,7 @@ Images are built for `linux/amd64` and `linux/arm64`, run as the non-root `node`
 With Claude Code:
 
 ```bash
-claude mcp add jwt-tools -- docker run --rm -i ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0
+claude mcp add jwt-tools -- docker run --rm -i ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.1
 ```
 
 With Cursor (`.cursor/mcp.json`) or any client that reads `.mcp.json`:
@@ -106,21 +106,21 @@ With Cursor (`.cursor/mcp.json`) or any client that reads `.mcp.json`:
   "mcpServers": {
     "jwt-tools": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0"]
+      "args": ["run", "--rm", "-i", "ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.1"]
     }
   }
 }
 ```
 
-A container only sees the files you mount. For servers that read local files (`dockerfile-lint`, `openapi-lint`, `osv-advisories` lockfile scans, `llms-txt`), mount the directory read-only and pass paths inside it, for example `docker run --rm -i -v "$PWD:/work:ro" ghcr.io/basitalisandhu/mcp-openapi-lint:0.1.0` and then `/work/openapi.yaml`. For `git-insights`, mount the repository at `/repo` (the image marks only `/repo` as a safe git directory): `docker run --rm -i -v "$PWD:/repo:ro" ghcr.io/basitalisandhu/mcp-git-insights:0.1.0`.
+A container only sees the files you mount. For servers that read local files (`dockerfile-lint`, `openapi-lint`, `osv-advisories` lockfile scans, `llms-txt`), mount the directory read-only and pass paths inside it, for example `docker run --rm -i -v "$PWD:/work:ro" ghcr.io/basitalisandhu/mcp-openapi-lint:0.1.1` and then `/work/openapi.yaml`. For `git-insights`, mount the repository at `/repo` (the image marks only `/repo` as a safe git directory): `docker run --rm -i -v "$PWD:/repo:ro" ghcr.io/basitalisandhu/mcp-git-insights:0.1.1`.
 
 Every image is signed with cosign (keyless) and carries a build provenance attestation; an SPDX SBOM per image is attached to the GitHub release. To check an image before running it:
 
 ```bash
-cosign verify ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0 \
+cosign verify ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.1 \
   --certificate-identity-regexp '^https://github.com/basitalisandhu/dev-mcp-servers/\.github/workflows/publish-github-packages\.yml@refs/tags/v' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
-gh attestation verify oci://ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0 --owner basitalisandhu
+gh attestation verify oci://ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.1 --owner basitalisandhu
 ```
 
 To build an image locally from a checkout: `docker build --build-arg SERVER=jwt-tools -t mcp-jwt-tools .`
@@ -179,7 +179,7 @@ Tests run offline: network-facing servers are tested against a fake `fetch`, and
 Set every package's `version` (they move together), add the release to `CHANGELOG.md`, and push an annotated tag:
 
 ```bash
-git tag -a v0.1.0 -m "0.1.0" && git push origin v0.1.0
+git tag -a v0.1.1 -m "0.1.1" && git push origin v0.1.1
 ```
 
 `publish-github-packages.yml` builds, tests, checks that every `version` matches the tag, then:

@@ -14,7 +14,7 @@ import { z } from "zod";
 import { MAX_DOCKERFILE_BYTES, RULES, lint, parseDockerfile } from "./dockerfile.js";
 
 export const SERVER_NAME = "dockerfile-lint";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.1.1";
 
 function json(value: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(value, null, 1) }] };

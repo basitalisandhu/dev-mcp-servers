@@ -12,7 +12,7 @@ import { z } from "zod";
 import { ALGORITHMS, analyseJwt, decodeJwt, signJwt, verifyJwt } from "./jwt.js";
 
 export const SERVER_NAME = "jwt-tools";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.1.1";
 const MAX_TOKEN = 16_384;
 const MAX_KEY = 16_384;
 

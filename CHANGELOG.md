@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.1] - 2026-10-06
+
 ### Changed
 
 - Removed the umbrella branding; this project stands alone and links its sibling repositories directly.

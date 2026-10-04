@@ -17,7 +17,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add dockerfile-lint -- npx -y @basitalisandhu/mcp-dockerfile-lint@0.1.0
+claude mcp add dockerfile-lint -- npx -y @basitalisandhu/mcp-dockerfile-lint@0.1.1
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -27,7 +27,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "dockerfile-lint": {
       "command": "npx",
-      "args": ["-y", "@basitalisandhu/mcp-dockerfile-lint@0.1.0"]
+      "args": ["-y", "@basitalisandhu/mcp-dockerfile-lint@0.1.1"]
     }
   }
 }

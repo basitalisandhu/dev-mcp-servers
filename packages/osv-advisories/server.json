@@ -9,13 +9,13 @@
     "subfolder": "packages/osv-advisories"
   },
   "websiteUrl": "https://github.com/basitalisandhu/dev-mcp-servers/tree/main/packages/osv-advisories#readme",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@basitalisandhu/mcp-osv-advisories",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"
