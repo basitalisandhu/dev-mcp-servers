@@ -53,7 +53,77 @@ npm run build
 claude mcp add jwt-tools -- node "$PWD/packages/jwt-tools/dist/index.js"
 ```
 
-Packages are published to npm by the release workflow when a version tag is pushed; until a tag exists for a version, install from a checkout.
+Packages are published to GitHub Packages (npm and container images, see Install) when a version tag is pushed; until a tag exists for a version, install from a checkout.
+
+## Install
+
+Every release is published in two places by `publish-github-packages.yml`: an npm package per server on GitHub Packages, and a container image per server on the GitHub Container Registry. The `npx` commands above use npmjs.com, where the packages appear once that registry is set up (see Releasing).
+
+| Server | npm (GitHub Packages) | Container (GHCR) |
+|---|---|---|
+| osv-advisories | `npm i -g @basitalisandhu/mcp-osv-advisories@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-osv-advisories:0.1.0` |
+| security-headers | `npm i -g @basitalisandhu/mcp-security-headers@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-security-headers:0.1.0` |
+| jwt-tools | `npm i -g @basitalisandhu/mcp-jwt-tools@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0` |
+| regex-lab | `npm i -g @basitalisandhu/mcp-regex-lab@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-regex-lab:0.1.0` |
+| cron-tools | `npm i -g @basitalisandhu/mcp-cron-tools@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-cron-tools:0.1.0` |
+| json-schema-tools | `npm i -g @basitalisandhu/mcp-json-schema-tools@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-json-schema-tools:0.1.0` |
+| openapi-lint | `npm i -g @basitalisandhu/mcp-openapi-lint@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-openapi-lint:0.1.0` |
+| dockerfile-lint | `npm i -g @basitalisandhu/mcp-dockerfile-lint@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-dockerfile-lint:0.1.0` |
+| git-insights | `npm i -g @basitalisandhu/mcp-git-insights@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-git-insights:0.1.0` |
+| llms-txt | `npm i -g @basitalisandhu/mcp-llms-txt@0.1.0` | `docker run --rm -i ghcr.io/basitalisandhu/mcp-llms-txt:0.1.0` |
+
+### npm from GitHub Packages
+
+Point the `@basitalisandhu` scope at GitHub Packages in `~/.npmrc`:
+
+```
+@basitalisandhu:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+GitHub's npm registry asks for a token even to install public packages. That is a GitHub limitation, not a setting of this repository: use a personal access token (classic) with the `read:packages` scope, exported as `GITHUB_TOKEN`. With that in place, install globally as in the table, or let the client start the server through `npx`:
+
+```bash
+claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.1.0
+```
+
+Each package installs a `mcp-<server>` command (for example `mcp-jwt-tools`) that speaks MCP on stdio.
+
+### Container images
+
+Images are built for `linux/amd64` and `linux/arm64`, run as the non-root `node` user, and speak stdio, so `-i` is required and no port is published. Each image is tagged with the version and `latest`; pin the version.
+
+With Claude Code:
+
+```bash
+claude mcp add jwt-tools -- docker run --rm -i ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0
+```
+
+With Cursor (`.cursor/mcp.json`) or any client that reads `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "jwt-tools": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0"]
+    }
+  }
+}
+```
+
+A container only sees the files you mount. For servers that read local files (`dockerfile-lint`, `openapi-lint`, `osv-advisories` lockfile scans, `llms-txt`), mount the directory read-only and pass paths inside it, for example `docker run --rm -i -v "$PWD:/work:ro" ghcr.io/basitalisandhu/mcp-openapi-lint:0.1.0` and then `/work/openapi.yaml`. For `git-insights`, mount the repository at `/repo` (the image marks only `/repo` as a safe git directory): `docker run --rm -i -v "$PWD:/repo:ro" ghcr.io/basitalisandhu/mcp-git-insights:0.1.0`.
+
+Every image is signed with cosign (keyless) and carries a build provenance attestation; an SPDX SBOM per image is attached to the GitHub release. To check an image before running it:
+
+```bash
+cosign verify ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0 \
+  --certificate-identity-regexp '^https://github.com/basitalisandhu/dev-mcp-servers/\.github/workflows/publish-github-packages\.yml@refs/tags/v' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+gh attestation verify oci://ghcr.io/basitalisandhu/mcp-jwt-tools:0.1.0 --owner basitalisandhu
+```
+
+To build an image locally from a checkout: `docker build --build-arg SERVER=jwt-tools -t mcp-jwt-tools .`
 
 ## Security posture
 
@@ -64,7 +134,7 @@ Packages are published to npm by the release workflow when a version tag is push
 - **No telemetry.** Nothing phones home. There are no analytics, update checks or crash reporters.
 - **Honest tool descriptions.** Tool descriptions say what the tool does and returns. They contain no instructions aimed at the model, and the outputs of `decode_jwt` and the lints say when something is unverified or heuristic.
 - **Small dependency trees.** Runtime dependencies are `@modelcontextprotocol/sdk` and `zod`, plus `ajv` and `ajv-formats` for json-schema-tools and `yaml` for openapi-lint. `npm ci` from the committed lockfile reproduces the exact tree.
-- **Provenance.** Releases are published with `npm publish --provenance`, so every package version links to the commit and workflow run that built it (`npm view @basitalisandhu/mcp-jwt-tools --json | jq .dist.attestations`).
+- **Provenance.** Container images get a build provenance attestation and a keyless cosign signature from the workflow run that built them, plus an SPDX SBOM on the release. When the npmjs.com release is enabled it publishes with `npm publish --provenance`, so each npmjs version links to its commit and workflow run.
 
 Before adding any MCP server, including these, read its source: it runs with your user's permissions and its tool results go into the model's context. See [SECURITY.md](SECURITY.md) for how to report a problem.
 
@@ -80,7 +150,9 @@ packages/<name>/
   README.md        tools, install, what it touches
 scripts/check-server-json.mjs   offline validation of every server.json
 .github/workflows/ci.yml        build and test every workspace on Node 20 and 22
-.github/workflows/release.yml   publish every workspace with provenance on a version tag
+.github/workflows/publish-github-packages.yml   npm packages and GHCR images on a version tag
+.github/workflows/release.yml   npmjs.com publish with provenance (off until NPMJS_PUBLISH is set)
+Dockerfile                      one image per server: --build-arg SERVER=<name>
 ```
 
 Build and test everything:
@@ -104,18 +176,26 @@ Tests run offline: network-facing servers are tested against a fake `fetch`, and
 
 ## Releasing
 
-Set every package's `version` (they move together), add the release to `CHANGELOG.md`, and push a tag:
+Set every package's `version` (they move together), add the release to `CHANGELOG.md`, and push an annotated tag:
 
 ```bash
-git tag v0.1.0 && git push origin v0.1.0
+git tag -a v0.1.0 -m "0.1.0" && git push origin v0.1.0
 ```
 
-`release.yml` builds, tests, checks that every `version` matches the tag, then runs `npm publish --workspaces --provenance --access public`. Authentication is one of:
+`publish-github-packages.yml` builds, tests, checks that every `version` matches the tag, then:
+
+- publishes each workspace to GitHub Packages npm with the workflow's `GITHUB_TOKEN` (a version that already exists is skipped, so a re-run is safe);
+- builds and pushes `ghcr.io/basitalisandhu/mcp-<server>:<version>` and `:latest` for every server, generates an SPDX SBOM, records a build provenance attestation and signs the image digest with cosign;
+- creates the GitHub release for the tag with generated notes and the SBOMs attached.
+
+No secret is needed. Pull requests that change the Dockerfile, the workflow or a `package.json` run the same build as a dry run.
+
+`release.yml` publishes the same packages to npmjs.com and is off until the repository variable `NPMJS_PUBLISH` is `true`. Before turning it on, set up one of:
 
 - **Trusted publishing (recommended).** On npmjs.com, for each package, add this repository and the workflow file name `release.yml` as a trusted publisher. No secret is needed; the workflow's `id-token: write` permission lets npm verify the GitHub OIDC token. The workflow upgrades npm first because trusted publishing needs npm 11.5.1 or newer.
 - **An automation token.** Create a granular access token with publish rights and store it as the repository secret `NPM_TOKEN`; the workflow passes it as `NODE_AUTH_TOKEN`.
 
-Provenance requires the workflow to run on GitHub-hosted runners from the public repository.
+It passes `--registry https://registry.npmjs.org`, which overrides the GitHub Packages registry in each `publishConfig`. Provenance requires the workflow to run on GitHub-hosted runners from the public repository.
 
 To list the servers in the [MCP registry](https://github.com/modelcontextprotocol/registry), each `server.json` is already in the registry's format and each `package.json` carries the matching `mcpName`; publish with the registry's `mcp-publisher` CLI from the package directory after the npm release.
 

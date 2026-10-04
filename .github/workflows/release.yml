@@ -11,6 +11,11 @@ name: release
 #      passes it as NODE_AUTH_TOKEN; with trusted publishing configured the secret can be left unset.
 #
 # Every package's version must already match the tag (for example tag v0.1.0 with "version": "0.1.0").
+#
+# Off by default. GitHub Packages publishing (publish-github-packages.yml) runs on the same tags, so this
+# job only runs once npmjs.com is set up: set the repository variable NPMJS_PUBLISH to "true"
+# (Settings > Secrets and variables > Actions > Variables) after configuring trusted publishing or NPM_TOKEN.
+# The --registry flag below overrides publishConfig.registry, which points at GitHub Packages.
 
 on:
   push:
@@ -24,6 +29,7 @@ permissions:
 jobs:
   publish:
     name: Build, test and publish all workspaces
+    if: vars.NPMJS_PUBLISH == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,6 +51,6 @@ jobs:
             if [ "$V" != "$TAG" ]; then echo "$pkg has version $V, tag is $TAG"; exit 1; fi
           done
       - name: Publish every workspace with provenance
-        run: npm publish --workspaces --provenance --access public
+        run: npm publish --workspaces --provenance --access public --registry https://registry.npmjs.org
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
