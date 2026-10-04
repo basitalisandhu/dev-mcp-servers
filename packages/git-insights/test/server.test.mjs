@@ -144,8 +144,8 @@ test("churn follows renames and counts binaries; authors aggregates by email", a
     const a = parse(await client.callTool({ name: "authors", arguments: { repo } }));
     assert.equal(a.commits, 5);
     assert.deepEqual(a.authors.map((x) => [x.email, x.commits, x.percent]), [["alice@example.com", 3, 60], ["bob@example.com", 2, 40]]);
-    assert.equal(a.authors[0].first_commit, "2026-01-01T10:00:00+00:00");
-    assert.equal(a.authors[0].last_commit, "2026-05-01T10:00:00+00:00");
+    assert.equal(a.authors[0].first_commit, "2026-01-01T10:00:00Z");
+    assert.equal(a.authors[0].last_commit, "2026-05-01T10:00:00Z");
   } finally {
     await close();
   }

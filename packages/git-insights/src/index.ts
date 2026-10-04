@@ -29,6 +29,9 @@ const pathSchema = z.string().min(1).max(1024).optional().describe("Limit to thi
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
 const SEP = "\u001f";
+
+/** git prints UTC offsets as +00:00 or Z depending on its version; keep one canonical form. */
+const isoZ = (d: string): string => d.replace(/\+00:00$/, "Z");
 const REC = "\u001e";
 
 /** Split a --numstat rename such as "src/{a.ts => b.ts}" or "a.ts => dir/b.ts" into its old and new paths. */
@@ -75,7 +78,8 @@ export function createServer(): McpServer {
         const top = info.bare ? info.path : info.top_level;
         const branch = (await runGit(top, ["rev-parse", "--abbrev-ref", "HEAD"]).catch(() => "")).trim();
         const headRaw = await runGit(top, ["log", "-1", `--format=%H${SEP}%an${SEP}%aI${SEP}%s`]).catch(() => "");
-        const [hash, author, date, subject] = headRaw.trim().split(SEP);
+        const [hash, author, dateRaw, subject] = headRaw.trim().split(SEP);
+        const date = dateRaw ? isoZ(dateRaw) : dateRaw;
         const remotes = (await runGit(top, ["remote", "-v"]).catch(() => ""))
           .trim()
           .split("\n")
@@ -144,7 +148,8 @@ export function createServer(): McpServer {
           .filter(Boolean)
           .map((chunk) => {
             const [header, ...rest] = chunk.split("\n");
-            const [hash, short, name, email, date, subject] = header.split(SEP);
+            const [hash, short, name, email, dateRaw, subject] = header.split(SEP);
+            const date = dateRaw ? isoZ(dateRaw) : dateRaw;
             const entry: Record<string, unknown> = { hash, short, author: name, email, date, subject };
             if (with_files) entry.files = rest.map((l) => l.trim()).filter(Boolean);
             return entry;
@@ -280,7 +285,8 @@ export function createServer(): McpServer {
         let total = 0;
         for (const line of out.split("\n")) {
           if (!line) continue;
-          const [name, email, date] = line.split(SEP);
+          const [name, email, dateRaw] = line.split(SEP);
+          const date = dateRaw ? isoZ(dateRaw) : dateRaw;
           total++;
           const key = email.toLowerCase();
           const e = byEmail.get(key);
