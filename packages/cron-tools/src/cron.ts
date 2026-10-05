@@ -334,8 +334,10 @@ export function previousRuns(c: ParsedCron, fromMs: number, tz: string, count: n
       continue;
     }
     if (!f.hour.values.includes(p.hour)) {
-      // UTC hour boundaries visit both occurrences of a repeated local hour.
-      t = t - p.minute * 60_000 - 60_000;
+      // A non-hour DST transition can start an hour partway through its minute range.
+      // Only skip minutes when the candidate boundary is still in this local hour.
+      const back = t - (p.minute + 1) * 60_000;
+      t = localParts(back + 60_000, tz).hour === p.hour ? back : t - 60_000;
       continue;
     }
     if (!f.minute.values.includes(p.minute)) {

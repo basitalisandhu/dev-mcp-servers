@@ -157,6 +157,8 @@ test("previous_runs is strictly before from, newest first, with DST and a bounde
     const overlap = await previous("30 2 * * *", "2026-10-25T03:00:00Z", "Europe/Berlin");
     assert.deepEqual(overlap.runs.map((r) => r.utc), ["2026-10-25T01:30:00.000Z", "2026-10-25T00:30:00.000Z"]);
     assert.deepEqual(overlap.runs.map((r) => r.local), ["2026-10-25T02:30:00+01:00", "2026-10-25T02:30:00+02:00"]);
+    const chatham = await previous("30 2 * * *", "2026-09-26T14:00:30Z", "Pacific/Chatham", 1);
+    assert.equal(chatham.runs[0].utc, "2026-09-26T13:45:00.000Z");
     const boundary = await previous("* * * * *", "2026-01-01T00:00:30Z", "UTC", 1);
     assert.equal(boundary.runs[0].utc, "2026-01-01T00:00:00.000Z");
     const leap = await previous("0 0 29 2 *", "2026-01-01T00:00:00Z");
@@ -176,6 +178,11 @@ test("optimized previous runs agree with an independent minute scan", () => {
     ["Europe/Berlin", "2026-10-26T12:00:30Z"],
     ["Europe/Berlin", "2026-03-30T12:00:30Z"],
     ["Asia/Kolkata", "2026-04-01T12:00:30Z"],
+    ["Pacific/Chatham", "2026-09-26T14:00:30Z"],
+    ["Australia/Lord_Howe", "2026-10-03T16:00:30Z"],
+    ["Asia/Kathmandu", "2026-04-01T12:00:30Z"],
+    ["America/New_York", "2026-11-01T08:00:30Z"],
+    ["America/Santiago", "2026-09-06T06:00:30Z"],
   ]) {
     const fromMs = Date.parse(from);
     for (const expression of ["*/17 * * * *", "30 2 * * *", "0 9 * * 1-5", "0 0 1 * mon"]) {
