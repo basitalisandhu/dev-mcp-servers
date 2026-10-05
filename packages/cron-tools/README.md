@@ -12,6 +12,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 | `explain_cron` | `expression` | One English sentence, for example `*/15 9-17 * * 1-5` is "At every 15th minute past every hour from 9 through 17 on Monday through Friday." |
 | `validate_cron` | `expression` | `valid`, errors, and warnings: both day fields restricted (OR semantics), days that never occur in the chosen months, `7` for Sunday, `?` spelling, macro expansion. |
 | `next_runs` | `expression`, `count?` (1 to 100), `timezone?` (IANA), `from?` (ISO 8601) | Upcoming run times in local time with offset and in UTC. Wall-clock times skipped by a forward DST transition are not run that day; a repeated hour runs twice. Stops after ten years. |
+| `previous_runs` | Same inputs as `next_runs` | Run times strictly before `from`, newest first, in local time with offset and in UTC. Uses the same DST semantics and ten-year horizon. |
 
 ## Install
 
