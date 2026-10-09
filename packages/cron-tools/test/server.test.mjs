@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer, SERVER_NAME } from "../dist/index.js";
-import { explainCron, nextRuns, parseCron, validateCron, wallToUtc } from "../dist/cron.js";
+import { explainCron, localParts, matches, nextRuns, previousRuns, parseCron, validateCron, wallToUtc } from "../dist/cron.js";
 
 async function connected() {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -15,11 +15,11 @@ async function connected() {
 }
 const parse = (r) => JSON.parse(r.content[0].text);
 
-test("lists the four tools", async () => {
+test("lists the five tools", async () => {
   const { client, close } = await connected();
   try {
     const { tools } = await client.listTools();
-    assert.deepEqual(tools.map((t) => t.name).sort(), ["explain_cron", "next_runs", "parse_cron", "validate_cron"]);
+    assert.deepEqual(tools.map((t) => t.name).sort(), ["explain_cron", "next_runs", "parse_cron", "previous_runs", "validate_cron"]);
     assert.equal(client.getServerVersion()?.name, SERVER_NAME);
   } finally {
     await close();
@@ -142,5 +142,56 @@ test("next_runs honours time zones, DST and the horizon", async () => {
     assert.ok(Date.parse(defaults.runs[0].utc) > Date.now() - 60_000);
   } finally {
     await close();
+  }
+});
+
+test("previous_runs is strictly before from, newest first, with DST and a bounded horizon", async () => {
+  const { client, close } = await connected();
+  try {
+    const previous = async (expression, from, timezone = "UTC", count = 2) =>
+      parse(await client.callTool({ name: "previous_runs", arguments: { expression, from, timezone, count } }));
+    const weekend = await previous("30 9 * * 1-5", "2026-03-30T07:30:00Z", "Europe/Berlin", 3);
+    assert.deepEqual(weekend.runs.map((r) => r.utc), ["2026-03-27T08:30:00.000Z", "2026-03-26T08:30:00.000Z", "2026-03-25T08:30:00.000Z"]);
+    const gap = await previous("30 2 * * *", "2026-03-30T00:30:00Z", "Europe/Berlin");
+    assert.deepEqual(gap.runs.map((r) => r.utc), ["2026-03-28T01:30:00.000Z", "2026-03-27T01:30:00.000Z"]);
+    const overlap = await previous("30 2 * * *", "2026-10-25T03:00:00Z", "Europe/Berlin");
+    assert.deepEqual(overlap.runs.map((r) => r.utc), ["2026-10-25T01:30:00.000Z", "2026-10-25T00:30:00.000Z"]);
+    assert.deepEqual(overlap.runs.map((r) => r.local), ["2026-10-25T02:30:00+01:00", "2026-10-25T02:30:00+02:00"]);
+    const chatham = await previous("30 2 * * *", "2026-09-26T14:00:30Z", "Pacific/Chatham", 1);
+    assert.equal(chatham.runs[0].utc, "2026-09-26T13:45:00.000Z");
+    const boundary = await previous("* * * * *", "2026-01-01T00:00:30Z", "UTC", 1);
+    assert.equal(boundary.runs[0].utc, "2026-01-01T00:00:00.000Z");
+    const leap = await previous("0 0 29 2 *", "2026-01-01T00:00:00Z");
+    assert.deepEqual(leap.runs.map((r) => r.utc), ["2024-02-29T00:00:00.000Z", "2020-02-29T00:00:00.000Z"]);
+    const never = await previous("0 0 31 2 *", "2026-01-01T00:00:00Z");
+    assert.equal(never.found, 0);
+    assert.match(never.note, /No run within ten years/);
+    const bad = await client.callTool({ name: "previous_runs", arguments: { expression: "* * * * *", count: 101 } });
+    assert.equal(bad.isError, true);
+  } finally {
+    await close();
+  }
+});
+
+test("optimized previous runs agree with an independent minute scan", () => {
+  for (const [zone, from] of [
+    ["Europe/Berlin", "2026-10-26T12:00:30Z"],
+    ["Europe/Berlin", "2026-03-30T12:00:30Z"],
+    ["Asia/Kolkata", "2026-04-01T12:00:30Z"],
+    ["Pacific/Chatham", "2026-09-26T14:00:30Z"],
+    ["Australia/Lord_Howe", "2026-10-03T16:00:30Z"],
+    ["Asia/Kathmandu", "2026-04-01T12:00:30Z"],
+    ["America/New_York", "2026-11-01T08:00:30Z"],
+    ["America/Santiago", "2026-09-06T06:00:30Z"],
+  ]) {
+    const fromMs = Date.parse(from);
+    for (const expression of ["*/17 * * * *", "30 2 * * *", "0 9 * * 1-5", "0 0 1 * mon"]) {
+      const parsed = parseCron(expression);
+      const expected = [];
+      for (let t = Math.ceil(fromMs / 60_000) * 60_000 - 60_000; t >= fromMs - 3 * 86400_000 && expected.length < 5; t -= 60_000) {
+        if (matches(localParts(t, zone), parsed)) expected.push(t);
+      }
+      assert.deepEqual(previousRuns(parsed, fromMs, zone, expected.length), expected, `${zone}: ${expression}`);
+    }
   }
 });

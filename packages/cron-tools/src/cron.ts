@@ -313,6 +313,43 @@ export function nextRuns(c: ParsedCron, fromMs: number, tz: string, count: numbe
   return out;
 }
 
+/** Previous `count` run instants strictly before `fromMs`, newest first. */
+export function previousRuns(c: ParsedCron, fromMs: number, tz: string, count: number): number[] {
+  const out: number[] = [];
+  const f = c.fields;
+  let t = Math.ceil(fromMs / 60_000) * 60_000 - 60_000;
+  const horizon = fromMs - HORIZON_MS;
+  for (let iter = 0; iter < MAX_ITERATIONS && out.length < count; iter++) {
+    if (t < horizon) break;
+    const p = localParts(t, tz);
+    const retreat = (wall: number) => {
+      t = Math.min(wallToUtc(wall, tz), t - 60_000);
+    };
+    if (!f.month.values.includes(p.month)) {
+      retreat(Date.UTC(p.year, p.month - 1, 0, 23, 59));
+      continue;
+    }
+    if (!dayMatches(p, c)) {
+      retreat(Date.UTC(p.year, p.month - 1, p.day, 0, 0) - 60_000);
+      continue;
+    }
+    if (!f.hour.values.includes(p.hour)) {
+      // A non-hour DST transition can start an hour partway through its minute range.
+      // Only skip minutes when the candidate boundary is still in this local hour.
+      const back = t - (p.minute + 1) * 60_000;
+      t = localParts(back + 60_000, tz).hour === p.hour ? back : t - 60_000;
+      continue;
+    }
+    if (!f.minute.values.includes(p.minute)) {
+      t -= 60_000;
+      continue;
+    }
+    out.push(t);
+    t -= 60_000;
+  }
+  return out;
+}
+
 export function formatLocal(ms: number, tz: string): string {
   const p = localParts(ms, tz);
   const pad = (n: number) => String(n).padStart(2, "0");

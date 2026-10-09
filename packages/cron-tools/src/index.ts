@@ -9,7 +9,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
-import { DAY_NAMES_EXPORT, MAX_RUNS, explainCron, formatLocal, isValidTimeZone, localParts, nextRuns, parseCron, validateCron } from "./cron.js";
+import { DAY_NAMES_EXPORT, MAX_RUNS, explainCron, formatLocal, isValidTimeZone, localParts, nextRuns, previousRuns, parseCron, validateCron } from "./cron.js";
 
 export const SERVER_NAME = "cron-tools";
 export const SERVER_VERSION = "0.1.1";
@@ -31,7 +31,7 @@ export function createServer(): McpServer {
       instructions:
         "Handles 5-field cron expressions in the Vixie cron dialect used by Linux crontab, GitHub Actions and most schedulers: lists (1,15), ranges (1-5), steps (*/10, 1-30/5), " +
         "month and weekday names, 0 or 7 for Sunday, and @hourly/@daily/@weekly/@monthly/@yearly. Seconds fields and Quartz L/W/# are rejected with an explanation. " +
-        "parse_cron shows the accepted values per field, explain_cron gives an English sentence, validate_cron lists errors and warnings, next_runs computes upcoming run times in an IANA time zone.",
+        "parse_cron shows the accepted values per field, explain_cron gives an English sentence, validate_cron lists errors and warnings, next_runs computes upcoming run times and previous_runs computes historical run times in an IANA time zone.",
     },
   );
 
@@ -88,46 +88,49 @@ export function createServer(): McpServer {
     },
   );
 
-  server.registerTool(
-    "next_runs",
-    {
-      title: "List the next runs of a cron expression",
-      description:
-        `Compute the next count (1 to ${MAX_RUNS}, default 5) run times of a 5-field cron expression in an IANA time zone (default UTC), starting strictly after 'from' ` +
-        "(ISO 8601 date-time, default now). Each run is returned in the zone's local time with its UTC offset and in UTC. Daylight-saving transitions follow the zone's rules: " +
-        "a wall-clock time skipped by a forward transition is not run that day, and a repeated hour runs twice. Reports when no run exists within ten years.",
-      inputSchema: {
-        expression: expressionSchema,
-        count: z.number().int().min(1).max(MAX_RUNS).optional(),
-        timezone: z.string().min(1).max(64).optional().describe("IANA zone such as Europe/Berlin or America/New_York. Default UTC."),
-        from: z.string().max(40).optional().describe("ISO 8601 date-time to start after, for example 2026-01-31T09:00:00Z. Default: now."),
+  for (const direction of ["next", "previous"] as const) {
+    server.registerTool(
+      `${direction}_runs`,
+      {
+        title: `List the ${direction} runs of a cron expression`,
+        description:
+          `Compute the ${direction} count (1 to ${MAX_RUNS}, default 5) run times of a 5-field cron expression in an IANA time zone (default UTC), strictly ${direction === "next" ? "after" : "before"} 'from' ` +
+          "(ISO 8601 date-time, default now). Each run is returned in the zone's local time with its UTC offset and in UTC. Daylight-saving transitions follow the zone's rules: " +
+          "a wall-clock time skipped by a forward transition is not run that day, and a repeated hour runs twice. Reports when no run exists within ten years. " +
+          (direction === "previous" ? "Results are newest first." : "Results are oldest first."),
+        inputSchema: {
+          expression: expressionSchema,
+          count: z.number().int().min(1).max(MAX_RUNS).optional(),
+          timezone: z.string().min(1).max(64).optional().describe("IANA zone such as Europe/Berlin or America/New_York. Default UTC."),
+          from: z.string().max(40).optional().describe(`ISO 8601 date-time to start ${direction === "next" ? "after" : "before"}, for example 2026-01-31T09:00:00Z. Default: now.`),
+        },
+        annotations: pure,
       },
-      annotations: pure,
-    },
-    async ({ expression, count, timezone, from }) => {
-      const tz = timezone ?? "UTC";
-      if (!isValidTimeZone(tz)) return fail(`${JSON.stringify(tz)} is not a known IANA time zone.`);
-      let fromMs = Date.now();
-      if (from !== undefined) {
-        fromMs = Date.parse(from);
-        if (!Number.isFinite(fromMs)) return fail(`${JSON.stringify(from)} is not an ISO 8601 date-time.`);
-      }
-      const v = validateCron(expression);
-      if (!v.valid || !v.parsed) return fail(v.errors.join("; "));
-      const n = count ?? 5;
-      const runs = nextRuns(v.parsed, fromMs, tz, n);
-      return json({
-        expression,
-        timezone: tz,
-        from: new Date(fromMs).toISOString(),
-        explanation: explainCron(expression),
-        warnings: v.warnings,
-        found: runs.length,
-        ...(runs.length < n ? { note: runs.length === 0 ? "No run within ten years of 'from'." : `Only ${runs.length} run(s) within ten years of 'from'.` } : {}),
-        runs: runs.map((ms) => ({ local: formatLocal(ms, tz), utc: new Date(ms).toISOString(), weekday: DAY_NAMES_EXPORT[localParts(ms, tz).weekday] })),
-      });
-    },
-  );
+      async ({ expression, count, timezone, from }) => {
+        const tz = timezone ?? "UTC";
+        if (!isValidTimeZone(tz)) return fail(`${JSON.stringify(tz)} is not a known IANA time zone.`);
+        let fromMs = Date.now();
+        if (from !== undefined) {
+          fromMs = Date.parse(from);
+          if (!Number.isFinite(fromMs)) return fail(`${JSON.stringify(from)} is not an ISO 8601 date-time.`);
+        }
+        const v = validateCron(expression);
+        if (!v.valid || !v.parsed) return fail(v.errors.join("; "));
+        const n = count ?? 5;
+        const runs = (direction === "next" ? nextRuns : previousRuns)(v.parsed, fromMs, tz, n);
+        return json({
+          expression,
+          timezone: tz,
+          from: new Date(fromMs).toISOString(),
+          explanation: explainCron(expression),
+          warnings: v.warnings,
+          found: runs.length,
+          ...(runs.length < n ? { note: runs.length === 0 ? "No run within ten years of 'from'." : `Only ${runs.length} run(s) within ten years of 'from'.` } : {}),
+          runs: runs.map((ms) => ({ local: formatLocal(ms, tz), utc: new Date(ms).toISOString(), weekday: DAY_NAMES_EXPORT[localParts(ms, tz).weekday] })),
+        });
+      },
+    );
+  }
 
   return server;
 }
