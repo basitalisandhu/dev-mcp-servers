@@ -14,7 +14,7 @@ import { MAX_REDIRECTS, fetchHeaders, type FetchHeadersOptions } from "./fetcher
 import { GRADED_HEADERS, HEADER_DOCS, gradeHeaders, toHeaderSet } from "./grade.js";
 
 export const SERVER_NAME = "security-headers";
-export const SERVER_VERSION = "0.1.1";
+export const SERVER_VERSION = "0.2.0";
 
 function json(value: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(value, null, 1) }] };

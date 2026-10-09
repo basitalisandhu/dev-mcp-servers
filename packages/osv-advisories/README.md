@@ -18,7 +18,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add osv-advisories -- npx -y @basitalisandhu/mcp-osv-advisories@0.1.1
+claude mcp add osv-advisories -- npx -y @basitalisandhu/mcp-osv-advisories@0.2.0
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -28,7 +28,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "osv-advisories": {
       "command": "npx",
-      "args": ["-y", "@basitalisandhu/mcp-osv-advisories@0.1.1"]
+      "args": ["-y", "@basitalisandhu/mcp-osv-advisories@0.2.0"]
     }
   }
 }

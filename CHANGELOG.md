@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-09
+
 ### Added
 
 - cron-tools `previous_runs`: historical run instants strictly before a timestamp, newest first, with time-zone/DST handling and the same bounded ten-year horizon as `next_runs`.

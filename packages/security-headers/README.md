@@ -17,7 +17,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add security-headers -- npx -y @basitalisandhu/mcp-security-headers@0.1.1
+claude mcp add security-headers -- npx -y @basitalisandhu/mcp-security-headers@0.2.0
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -27,7 +27,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "security-headers": {
       "command": "npx",
-      "args": ["-y", "@basitalisandhu/mcp-security-headers@0.1.1"]
+      "args": ["-y", "@basitalisandhu/mcp-security-headers@0.2.0"]
     }
   }
 }

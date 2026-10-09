@@ -9,11 +9,11 @@
     "subfolder": "packages/llms-txt"
   },
   "websiteUrl": "https://basitalisandhu.github.io/dev-mcp-servers/",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "oci",
-      "identifier": "ghcr.io/basitalisandhu/mcp-llms-txt:0.1.1",
+      "identifier": "ghcr.io/basitalisandhu/mcp-llms-txt:0.2.0",
       "runtimeHint": "docker",
       "transport": {
         "type": "stdio"

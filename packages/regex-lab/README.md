@@ -17,7 +17,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add regex-lab -- npx -y @basitalisandhu/mcp-regex-lab@0.1.1
+claude mcp add regex-lab -- npx -y @basitalisandhu/mcp-regex-lab@0.2.0
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -27,7 +27,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "regex-lab": {
       "command": "npx",
-      "args": ["-y", "@basitalisandhu/mcp-regex-lab@0.1.1"]
+      "args": ["-y", "@basitalisandhu/mcp-regex-lab@0.2.0"]
     }
   }
 }

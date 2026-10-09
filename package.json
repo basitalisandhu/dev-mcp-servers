@@ -1,6 +1,6 @@
 {
   "name": "dev-mcp-servers",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Ten small MCP servers for everyday development and security checks, one npm package each.",
   "license": "MIT",

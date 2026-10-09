@@ -1,6 +1,6 @@
 {
   "name": "@basitalisandhu/mcp-osv-advisories",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "mcpName": "io.github.basitalisandhu/mcp-osv-advisories",
   "description": "MCP server that queries OSV.dev for known vulnerabilities by package, version and ecosystem, and scans lockfiles (package-lock.json, requirements.txt, poetry.lock, go.sum).",
   "license": "MIT",

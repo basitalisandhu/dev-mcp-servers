@@ -16,7 +16,7 @@ import { LOCKFILE_FORMATS, detectFormat, parseLockfile, type LockPackage } from 
 import { ECOSYSTEMS, MAX_BATCH_QUERIES, OsvClient, OsvError, normaliseEcosystem, summarise, type OsvClientOptions } from "./osv.js";
 
 export const SERVER_NAME = "osv-advisories";
-export const SERVER_VERSION = "0.1.1";
+export const SERVER_VERSION = "0.2.0";
 export const MAX_LOCKFILE_BYTES = 10 * 1024 * 1024;
 
 function json(value: unknown) {

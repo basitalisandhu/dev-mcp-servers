@@ -17,7 +17,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add json-schema-tools -- npx -y @basitalisandhu/mcp-json-schema-tools@0.1.1
+claude mcp add json-schema-tools -- npx -y @basitalisandhu/mcp-json-schema-tools@0.2.0
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -27,7 +27,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "json-schema-tools": {
       "command": "npx",
-      "args": ["-y", "@basitalisandhu/mcp-json-schema-tools@0.1.1"]
+      "args": ["-y", "@basitalisandhu/mcp-json-schema-tools@0.2.0"]
     }
   }
 }

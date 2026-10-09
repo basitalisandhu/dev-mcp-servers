@@ -13,7 +13,7 @@ import { z } from "zod";
 import { MAX_DOCUMENT_BYTES, METHODS, RULES, deref, lint, listOperations, loadDocument } from "./lint.js";
 
 export const SERVER_NAME = "openapi-lint";
-export const SERVER_VERSION = "0.1.1";
+export const SERVER_VERSION = "0.2.0";
 
 function json(value: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(value, null, 1) }] };
