@@ -20,7 +20,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add git-insights -- docker run --rm -i -v "$PWD:/repo:ro" ghcr.io/basitalisandhu/mcp-git-insights:0.2.0
+claude mcp add git-insights -- docker run --rm -i -v "$PWD:/repo:ro" ghcr.io/basitalisandhu/mcp-git-insights:0.2.1
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -30,7 +30,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "git-insights": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "-v", "/path/to/your/project:/repo:ro", "ghcr.io/basitalisandhu/mcp-git-insights:0.2.0"]
+      "args": ["run", "--rm", "-i", "-v", "/path/to/your/project:/repo:ro", "ghcr.io/basitalisandhu/mcp-git-insights:0.2.1"]
     }
   }
 }

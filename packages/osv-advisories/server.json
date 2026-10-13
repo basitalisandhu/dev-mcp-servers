@@ -9,11 +9,11 @@
     "subfolder": "packages/osv-advisories"
   },
   "websiteUrl": "https://basitalisandhu.github.io/dev-mcp-servers/",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "packages": [
     {
       "registryType": "oci",
-      "identifier": "ghcr.io/basitalisandhu/mcp-osv-advisories:0.2.0",
+      "identifier": "ghcr.io/basitalisandhu/mcp-osv-advisories:0.2.1",
       "runtimeHint": "docker",
       "transport": {
         "type": "stdio"

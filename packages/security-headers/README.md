@@ -17,7 +17,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add security-headers -- docker run --rm -i ghcr.io/basitalisandhu/mcp-security-headers:0.2.0
+claude mcp add security-headers -- docker run --rm -i ghcr.io/basitalisandhu/mcp-security-headers:0.2.1
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -27,7 +27,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "security-headers": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "ghcr.io/basitalisandhu/mcp-security-headers:0.2.0"]
+      "args": ["run", "--rm", "-i", "ghcr.io/basitalisandhu/mcp-security-headers:0.2.1"]
     }
   }
 }
