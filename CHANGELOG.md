@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-13
+
 ### Fixed
 
 - cron-tools `next_runs` no longer skips the second occurrence of a wall-clock time that repeats when clocks go back at a time that is not on the hour, for example `50 2 * * *` in `Pacific/Chatham` on 5 April 2026 (#13). Regression tests compare `next_runs` with a minute-by-minute scan across every 2026 clock change in `Pacific/Chatham`, `Europe/London`, `America/Los_Angeles` and `Australia/Lord_Howe`.

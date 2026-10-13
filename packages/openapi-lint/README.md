@@ -18,7 +18,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add openapi-lint -- docker run --rm -i -v "$PWD:/work:ro" ghcr.io/basitalisandhu/mcp-openapi-lint:0.2.0
+claude mcp add openapi-lint -- docker run --rm -i -v "$PWD:/work:ro" ghcr.io/basitalisandhu/mcp-openapi-lint:0.2.1
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -28,7 +28,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "openapi-lint": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "-v", "/path/to/your/project:/work:ro", "ghcr.io/basitalisandhu/mcp-openapi-lint:0.2.0"]
+      "args": ["run", "--rm", "-i", "-v", "/path/to/your/project:/work:ro", "ghcr.io/basitalisandhu/mcp-openapi-lint:0.2.1"]
     }
   }
 }
