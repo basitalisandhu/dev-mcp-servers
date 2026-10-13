@@ -17,7 +17,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add regex-lab -- npx -y @basitalisandhu/mcp-regex-lab@0.2.0
+claude mcp add regex-lab -- docker run --rm -i ghcr.io/basitalisandhu/mcp-regex-lab:0.2.0
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -26,14 +26,14 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
 {
   "mcpServers": {
     "regex-lab": {
-      "command": "npx",
-      "args": ["-y", "@basitalisandhu/mcp-regex-lab@0.2.0"]
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "ghcr.io/basitalisandhu/mcp-regex-lab:0.2.0"]
     }
   }
 }
 ```
 
-Pin the version as shown so that an update to the package cannot change what runs in your editor without you noticing. From a checkout, use `"command": "node", "args": ["<path>/packages/regex-lab/dist/index.js"]` after `npm install && npm run build` at the repository root.
+Pin the version as shown so that an update cannot change what runs in your editor without you noticing. The package is not on npmjs.com yet, so `npx` does not work; see the [repository README](https://github.com/basitalisandhu/dev-mcp-servers#install) for GitHub Packages npm. From a checkout, use `"command": "node", "args": ["<path>/packages/regex-lab/dist/index.js"]` after `npm install && npm run build` at the repository root.
 
 ## What it touches
 

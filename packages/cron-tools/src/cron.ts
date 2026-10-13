@@ -300,7 +300,10 @@ export function nextRuns(c: ParsedCron, fromMs: number, tz: string, count: numbe
     if (!f.hour.values.includes(p.hour)) {
       // Step to the next hour boundary in UTC. Local hours map onto contiguous UTC hours, and unlike a
       // wall-clock jump this visits both occurrences of an hour that repeats when clocks fall back.
-      t = t - p.minute * 60_000 + 3_600_000;
+      // A transition that is not on a whole hour (Pacific/Chatham falls back at 03:45) can end this
+      // local hour early; then step a minute at a time so the repeated minutes are not skipped.
+      const next = t - p.minute * 60_000 + 3_600_000;
+      t = localParts(next - 60_000, tz).hour === p.hour ? next : t + 60_000;
       continue;
     }
     if (!f.minute.values.includes(p.minute)) {

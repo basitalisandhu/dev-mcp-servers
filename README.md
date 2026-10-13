@@ -6,28 +6,43 @@ All servers are TypeScript on the official `@modelcontextprotocol/sdk`, speak st
 
 ## Servers
 
-| Server | Purpose | Install |
+| Server | Purpose | Add to Claude Code |
 |---|---|---|
-| [osv-advisories](packages/osv-advisories) | Query OSV.dev for known vulnerabilities by package and version; scan `package-lock.json`, `requirements.txt`, `poetry.lock` and `go.sum` | `claude mcp add osv-advisories -- npx -y @basitalisandhu/mcp-osv-advisories@0.2.0` |
-| [security-headers](packages/security-headers) | Fetch a public URL's response headers and grade CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy and cookies | `claude mcp add security-headers -- npx -y @basitalisandhu/mcp-security-headers@0.2.0` |
-| [jwt-tools](packages/jwt-tools) | Decode a JWT without verifying it, flag `alg: none`, expiry and missing claims, verify HS256/RS256 with a key, sign test tokens | `claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.2.0` |
-| [regex-lab](packages/regex-lab) | Test a regex against samples in a timeout-guarded worker, explain it, detect catastrophic backtracking | `claude mcp add regex-lab -- npx -y @basitalisandhu/mcp-regex-lab@0.2.0` |
-| [cron-tools](packages/cron-tools) | Parse, explain and validate 5-field cron, list the next runs in a time zone | `claude mcp add cron-tools -- npx -y @basitalisandhu/mcp-cron-tools@0.2.0` |
-| [json-schema-tools](packages/json-schema-tools) | Validate JSON with Ajv, infer a schema from samples, diff two schemas with a compatibility verdict | `claude mcp add json-schema-tools -- npx -y @basitalisandhu/mcp-json-schema-tools@0.2.0` |
-| [openapi-lint](packages/openapi-lint) | Lint OpenAPI 3.x for missing security, responses, descriptions and versioning; list operations | `claude mcp add openapi-lint -- npx -y @basitalisandhu/mcp-openapi-lint@0.2.0` |
-| [dockerfile-lint](packages/dockerfile-lint) | Lint Dockerfiles for root users, `latest` tags, secrets in `ENV`/`ARG`, missing `HEALTHCHECK`, apt without cleanup, `ADD` vs `COPY` | `claude mcp add dockerfile-lint -- npx -y @basitalisandhu/mcp-dockerfile-lint@0.2.0` |
-| [git-insights](packages/git-insights) | Read-only git statistics: log, blame ownership, churn, authors, large files | `claude mcp add git-insights -- npx -y @basitalisandhu/mcp-git-insights@0.2.0` |
-| [llms-txt](packages/llms-txt) | Generate `llms.txt` from local Markdown or a sitemap, check an existing one | `claude mcp add llms-txt -- npx -y @basitalisandhu/mcp-llms-txt@0.2.0` |
+| [osv-advisories](packages/osv-advisories) | Query OSV.dev for known vulnerabilities by package and version; scan `package-lock.json`, `requirements.txt`, `poetry.lock` and `go.sum` | `claude mcp add osv-advisories -- docker run --rm -i ghcr.io/basitalisandhu/mcp-osv-advisories:0.2.0` |
+| [security-headers](packages/security-headers) | Fetch a public URL's response headers and grade CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy and cookies | `claude mcp add security-headers -- docker run --rm -i ghcr.io/basitalisandhu/mcp-security-headers:0.2.0` |
+| [jwt-tools](packages/jwt-tools) | Decode a JWT without verifying it, flag `alg: none`, expiry and missing claims, verify HS256/RS256 with a key, sign test tokens | `claude mcp add jwt-tools -- docker run --rm -i ghcr.io/basitalisandhu/mcp-jwt-tools:0.2.0` |
+| [regex-lab](packages/regex-lab) | Test a regex against samples in a timeout-guarded worker, explain it, detect catastrophic backtracking | `claude mcp add regex-lab -- docker run --rm -i ghcr.io/basitalisandhu/mcp-regex-lab:0.2.0` |
+| [cron-tools](packages/cron-tools) | Parse, explain and validate 5-field cron, list the next runs in a time zone | `claude mcp add cron-tools -- docker run --rm -i ghcr.io/basitalisandhu/mcp-cron-tools:0.2.0` |
+| [json-schema-tools](packages/json-schema-tools) | Validate JSON with Ajv, infer a schema from samples, diff two schemas with a compatibility verdict | `claude mcp add json-schema-tools -- docker run --rm -i ghcr.io/basitalisandhu/mcp-json-schema-tools:0.2.0` |
+| [openapi-lint](packages/openapi-lint) | Lint OpenAPI 3.x for missing security, responses, descriptions and versioning; list operations | `claude mcp add openapi-lint -- docker run --rm -i ghcr.io/basitalisandhu/mcp-openapi-lint:0.2.0` |
+| [dockerfile-lint](packages/dockerfile-lint) | Lint Dockerfiles for root users, `latest` tags, secrets in `ENV`/`ARG`, missing `HEALTHCHECK`, apt without cleanup, `ADD` vs `COPY` | `claude mcp add dockerfile-lint -- docker run --rm -i ghcr.io/basitalisandhu/mcp-dockerfile-lint:0.2.0` |
+| [git-insights](packages/git-insights) | Read-only git statistics: log, blame ownership, churn, authors, large files | `claude mcp add git-insights -- docker run --rm -i -v "$PWD:/repo:ro" ghcr.io/basitalisandhu/mcp-git-insights:0.2.0` |
+| [llms-txt](packages/llms-txt) | Generate `llms.txt` from local Markdown or a sitemap, check an existing one | `claude mcp add llms-txt -- docker run --rm -i ghcr.io/basitalisandhu/mcp-llms-txt:0.2.0` |
 
 Every package README lists its tools with inputs and outputs, the exact `claude mcp add` command, a `.mcp.json` snippet, and what the server touches on disk and on the network.
 
 ## Quick start
 
-With Claude Code:
+For anyone who uses an MCP client (Claude Code, Claude Desktop, Cursor) and wants quick, local answers to everyday security and developer questions. Every server runs from a public container image, so all you need is Docker:
 
 ```bash
-claude mcp add jwt-tools -- npx -y @basitalisandhu/mcp-jwt-tools@0.2.0
+claude mcp add jwt-tools -- docker run --rm -i ghcr.io/basitalisandhu/mcp-jwt-tools:0.2.0
 claude mcp list
+```
+
+Then ask your client to decode a token. A real `decode_jwt` result for an unsigned, expired token (trimmed):
+
+```json
+{
+  "verified": false,
+  "header": { "alg": "none" },
+  "payload": { "sub": "user-1", "exp": 1700000000 },
+  "findings": [
+    { "code": "alg-none", "severity": "critical", "message": "alg is none: the token is unsigned. Any verifier that accepts none accepts forged tokens." },
+    { "code": "expired", "severity": "high", "message": "Expired 1.0 h ago (exp 2023-11-14T22:13:20.000Z)." },
+    { "code": "aud-missing", "severity": "medium", "message": "No aud claim: the token can be replayed against any service that shares the key." }
+  ]
+}
 ```
 
 Add `-s user` to install for every project rather than the current one. For clients that read `.mcp.json` (Claude Code, Claude Desktop, Cursor), add an entry per server:
@@ -35,15 +50,15 @@ Add `-s user` to install for every project rather than the current one. For clie
 ```json
 {
   "mcpServers": {
-    "jwt-tools": { "command": "npx", "args": ["-y", "@basitalisandhu/mcp-jwt-tools@0.2.0"] },
-    "osv-advisories": { "command": "npx", "args": ["-y", "@basitalisandhu/mcp-osv-advisories@0.2.0"] }
+    "jwt-tools": { "command": "docker", "args": ["run", "--rm", "-i", "ghcr.io/basitalisandhu/mcp-jwt-tools:0.2.0"] },
+    "osv-advisories": { "command": "docker", "args": ["run", "--rm", "-i", "ghcr.io/basitalisandhu/mcp-osv-advisories:0.2.0"] }
   }
 }
 ```
 
-Pin the version in the `npx` argument, as above. An unpinned `npx -y package` runs whatever is on the registry at the time, which turns a package update into code that runs inside your editor without review.
+Pin the version, as above. An unpinned image or package runs whatever was published last, which turns an update into code that runs inside your editor without review.
 
-From a checkout instead of npm:
+Without Docker, run from a checkout (Node 20 or newer):
 
 ```bash
 git clone https://github.com/basitalisandhu/dev-mcp-servers
@@ -53,11 +68,11 @@ npm run build
 claude mcp add jwt-tools -- node "$PWD/packages/jwt-tools/dist/index.js"
 ```
 
-Packages are published to GitHub Packages (npm and container images, see Install) when a version tag is pushed; until a tag exists for a version, install from a checkout.
+The packages are not on npmjs.com yet, so `npx -y @basitalisandhu/mcp-<name>` does not work; use a container, a checkout, or the GitHub Packages npm registry (see Install).
 
 ## Install
 
-Every release is published in two places by `publish-github-packages.yml`: an npm package per server on GitHub Packages, and a container image per server on the GitHub Container Registry. The `npx` commands above use npmjs.com, where the packages appear once that registry is set up (see Releasing).
+Every release is published in two places by `publish-github-packages.yml`: an npm package per server on GitHub Packages, and a container image per server on the GitHub Container Registry. The images can be pulled without signing in; GitHub Packages npm needs a token even for public packages. Publishing to npmjs.com is set up but off (see Releasing).
 
 | Server | npm (GitHub Packages) | Container (GHCR) |
 |---|---|---|
@@ -213,8 +228,10 @@ Once npmjs.com publishing is on, an npm entry (`registryType: npm`, `registryBas
 
 ## Related
 
-More tools by the same author: https://github.com/basitalisandhu
+Project hub: https://basitalisandhu.github.io/ . More tools by the same author: https://github.com/basitalisandhu
 
+- [ai-agent-incidents](https://github.com/basitalisandhu/ai-agent-incidents): open dataset of AI agent and LLM security incidents, with a searchable site.
+- [awesome-agent-security](https://github.com/basitalisandhu/awesome-agent-security): curated list of AI agent security tools, papers and datasets.
 - [agent-security-skills](https://github.com/basitalisandhu/agent-security-skills): Claude Code plugin and skill pack for securing LLM agents, including an MCP server over the AI agent incident dataset.
 
 ## Licence

@@ -195,3 +195,53 @@ test("optimized previous runs agree with an independent minute scan", () => {
     }
   }
 });
+
+/** Every UTC instant in [from, to) whose local time in the zone matches, found one minute at a time. */
+function minuteScan(parsed, zone, fromMs, toMs) {
+  const out = [];
+  for (let t = fromMs; t < toMs; t += 60_000) if (matches(localParts(t, zone), parsed)) out.push(t);
+  return out;
+}
+
+/** The 2026 instants at which the zone's UTC offset changes, to the half hour. */
+function transitions2026(zone) {
+  const out = [];
+  let prev;
+  for (let t = Date.UTC(2026, 0, 1); t < Date.UTC(2027, 0, 1); t += 1_800_000) {
+    const p = localParts(t, zone);
+    const offset = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - t;
+    if (prev !== undefined && offset !== prev) out.push(t);
+    prev = offset;
+  }
+  return out;
+}
+
+test("next runs agree with a minute scan across every 2026 change in four zones (issue #13)", () => {
+  const expressions = ["50 2 * * *", "45 2 * * *", "30 1 * * *", "0 2 * * *", "*/20 1-3 * * *", "59 1 * * *", "10 0-4 * * *"];
+  for (const zone of ["Pacific/Chatham", "Europe/London", "America/Los_Angeles", "Australia/Lord_Howe"]) {
+    const changes = transitions2026(zone);
+    assert.equal(changes.length, 2, `${zone} has two changes in 2026`);
+    for (const change of changes) {
+      const fromMs = change - 6 * 3_600_000;
+      const toMs = change + 6 * 3_600_000;
+      for (const expression of expressions) {
+        const parsed = parseCron(expression);
+        const expected = minuteScan(parsed, zone, fromMs + 60_000, toMs);
+        const got = nextRuns(parsed, fromMs, zone, 100).filter((t) => t < toMs);
+        assert.deepEqual(got, expected, `${zone} ${new Date(change).toISOString()}: ${expression}`);
+      }
+    }
+  }
+});
+
+test("a repeated wall-clock time runs twice and a skipped one not at all (issue #13)", () => {
+  const twice = (expression, zone, from) => nextRuns(parseCron(expression), Date.parse(from), zone, 3).map((t) => new Date(t).toISOString());
+  // Pacific/Chatham falls back from 03:45 to 02:45 on 5 April 2026, so 02:50 happens twice.
+  assert.deepEqual(twice("50 2 * * *", "Pacific/Chatham", "2026-04-04T12:00:00Z").slice(0, 2), ["2026-04-04T13:05:00.000Z", "2026-04-04T14:05:00.000Z"]);
+  // Europe/London falls back from 02:00 to 01:00 on 25 October 2026, so 01:30 happens twice.
+  assert.deepEqual(twice("30 1 * * *", "Europe/London", "2026-10-24T22:00:00Z").slice(0, 2), ["2026-10-25T00:30:00.000Z", "2026-10-25T01:30:00.000Z"]);
+  // Europe/London springs forward from 01:00 to 02:00 on 29 March 2026, so 01:30 does not happen that day.
+  assert.deepEqual(twice("30 1 * * *", "Europe/London", "2026-03-28T22:00:00Z").slice(0, 2), ["2026-03-30T00:30:00.000Z", "2026-03-31T00:30:00.000Z"]);
+  // Pacific/Chatham springs forward from 02:45 to 03:45 on 27 September 2026, so 03:00 does not happen on the 27th and the next run is 03:00 on the 28th.
+  assert.deepEqual(twice("0 3 * * *", "Pacific/Chatham", "2026-09-26T12:00:00Z").slice(0, 1), ["2026-09-27T13:15:00.000Z"]);
+});
