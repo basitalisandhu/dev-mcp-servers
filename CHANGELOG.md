@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Fixed
+
+- cron-tools `next_runs` no longer skips the second occurrence of a wall-clock time that repeats when clocks go back at a time that is not on the hour, for example `50 2 * * *` in `Pacific/Chatham` on 5 April 2026 (#13). Regression tests compare `next_runs` with a minute-by-minute scan across every 2026 clock change in `Pacific/Chatham`, `Europe/London`, `America/Los_Angeles` and `Australia/Lord_Howe`.
+
+### Changed
+
+- The quick start and every package README install with the public container images (`docker run --rm -i ghcr.io/basitalisandhu/mcp-<name>:<version>`), which work without an account. The earlier `npx -y @basitalisandhu/mcp-<name>` commands failed because the packages are not on npmjs.com yet.
+- The README states who the servers are for, shows a real `decode_jwt` result and links the project hub and the sibling repositories.
+- Every GitHub Action in `ci.yml` and `release.yml` is pinned by commit SHA, and CI checkouts no longer keep the token.
+
+### Added
+
+- `scripts/tool-coverage.test.mjs`, run by `npm test`: every server must start, list at least one tool, and have every tool called by name in its own tests.
+- Dependabot for npm, GitHub Actions and the Dockerfile base image, weekly.
+
 ## [0.2.0] - 2026-10-09
 
 ### Added

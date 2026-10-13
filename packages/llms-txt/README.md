@@ -17,7 +17,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add llms-txt -- npx -y @basitalisandhu/mcp-llms-txt@0.2.0
+claude mcp add llms-txt -- docker run --rm -i -v "$PWD:/work:ro" ghcr.io/basitalisandhu/mcp-llms-txt:0.2.0
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -26,14 +26,14 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
 {
   "mcpServers": {
     "llms-txt": {
-      "command": "npx",
-      "args": ["-y", "@basitalisandhu/mcp-llms-txt@0.2.0"]
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "-v", "/path/to/your/project:/work:ro", "ghcr.io/basitalisandhu/mcp-llms-txt:0.2.0"]
     }
   }
 }
 ```
 
-Pin the version as shown so that an update to the package cannot change what runs in your editor without you noticing. From a checkout, use `"command": "node", "args": ["<path>/packages/llms-txt/dist/index.js"]` after `npm install && npm run build` at the repository root.
+Pin the version as shown so that an update cannot change what runs in your editor without you noticing. The container sees only the mounted directory, so pass paths under `/work`. The package is not on npmjs.com yet, so `npx` does not work; see the [repository README](https://github.com/basitalisandhu/dev-mcp-servers#install) for GitHub Packages npm. From a checkout, use `"command": "node", "args": ["<path>/packages/llms-txt/dist/index.js"]` after `npm install && npm run build` at the repository root.
 
 ## What it touches
 
