@@ -112,7 +112,7 @@ function spawn(data: Record<string, unknown>, timeoutMs: number, onMessage: (msg
       else if (msg.type === "done") finish({ timedOut: false });
       else onMessage(msg);
     });
-    worker.on("error", (err) => finish({ timedOut: false, error: err.message }));
+    worker.on("error", (err) => finish({ timedOut: false, error: err instanceof Error ? err.message : String(err) }));
     worker.on("exit", (code) => {
       if (!settled) finish({ timedOut: false, error: code === 0 ? undefined : `worker exited with code ${code}` });
     });
