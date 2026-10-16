@@ -8,6 +8,8 @@ Only the latest release on `main` is supported. Pin a version in your `npx` argu
 
 ## Reporting a vulnerability
 
+Report a vulnerability privately: <https://github.com/basitalisandhu/dev-mcp-servers/security/advisories/new>
+
 Please do not open a public issue for a security problem.
 
 1. Use GitHub's private vulnerability reporting on this repository ("Security" tab, "Report a vulnerability").
