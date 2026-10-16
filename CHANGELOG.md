@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Changed
+
+- Raise `@types/node` to 26 in the root and every package, and narrow the worker `error` event argument in regex-lab with `instanceof Error` (the 26 typings declare it `unknown`) (#20).
+
 ## [0.2.1] - 2026-10-13
 
 ### Fixed
