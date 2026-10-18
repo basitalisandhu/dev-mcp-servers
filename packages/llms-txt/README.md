@@ -17,7 +17,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 Claude Code:
 
 ```bash
-claude mcp add llms-txt -- docker run --rm -i -v "$PWD:/work:ro" ghcr.io/basitalisandhu/mcp-llms-txt:0.2.1
+claude mcp add llms-txt -- docker run --rm -i -v "$PWD:/work:ro" ghcr.io/basitalisandhu/mcp-llms-txt:0.2.2
 ```
 
 Add `-s user` to make it available in every project. Any client that reads `.mcp.json` (Claude Code, Claude Desktop, Cursor):
@@ -27,7 +27,7 @@ Add `-s user` to make it available in every project. Any client that reads `.mcp
   "mcpServers": {
     "llms-txt": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "-v", "/path/to/your/project:/work:ro", "ghcr.io/basitalisandhu/mcp-llms-txt:0.2.1"]
+      "args": ["run", "--rm", "-i", "-v", "/path/to/your/project:/work:ro", "ghcr.io/basitalisandhu/mcp-llms-txt:0.2.2"]
     }
   }
 }
