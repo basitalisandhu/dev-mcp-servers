@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Fixed
+
+- security-headers warns and removes Permissions-Policy points when sensitive features allow every origin with `*` (#5).
+
 ## [0.2.2] - 2026-10-18
 
 ### Changed
