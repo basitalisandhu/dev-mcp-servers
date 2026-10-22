@@ -67,29 +67,35 @@ test("lint_dockerfile accounts for sibling and inline dockerignore with conserva
     await writeFile(join(dir, ".dockerignore"), safe);
     assert.equal(finding(await client.callTool({ name: "lint_dockerfile", arguments: { path: file } })), undefined);
     assert.ok(finding(await client.callTool({ name: "lint_dockerfile", arguments: { content } })), "inline never reads filesystem ignores");
-    assert.equal(finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore_content: safe } })), undefined);
+    assert.equal(finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore: safe } })), undefined);
     for (const [ignore, exposed] of [
       [".git\nnode_modules\n", ".env"],
+      [`${safe}!.env\n`, ".env"],
       [`${safe}!.env.secret\n`, ".env"],
       [`${safe}!.git/private/config\n`, ".git"],
       [`${safe}!node_modules/private/index.js\n`, "node_modules"],
-      [".git\n.env\nnode_modules\n", ".env"],
       [".git\n.env*[!z]\nnode_modules\n", ".env"],
     ]) {
-      const f = finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore_content: ignore } }));
+      const f = finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore: ignore } }));
       assert.ok(f, ignore);
       assert.ok(f.message.includes(exposed), f.message);
     }
     for (const ignore of [
       "*.tmp\n.git\n.env*\nnode_modules\n",
       "/.git/\n/.env*\n/node_modules/\n",
+      ".git\n.env\nnode_modules\n",
+      "**/.git\n**/.env*\n**/node_modules\n",
+      ".g*t\n.e*\nnode_*\n",
       `${safe}!.env.secret\n.env*\n`,
       "**\n!src/**\n",
-    ]) assert.equal(finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore_content: ignore } })), undefined, ignore);
-    const overridden = finding(await client.callTool({ name: "lint_dockerfile", arguments: { path: file, dockerignore_content: "" } }));
+    ]) assert.equal(finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore: ignore } })), undefined, ignore);
+    const overridden = finding(await client.callTool({ name: "lint_dockerfile", arguments: { path: file, dockerignore: "" } }));
     assert.ok(overridden, "explicit inline input overrides sibling");
     await rm(join(dir, ".dockerignore"));
-    await writeFile(join(dir, ".dockerignore"), "#".repeat(1024 * 1024 + 1));
+    const oversizedInline = await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore: "é".repeat(40000) } });
+    assert.equal(oversizedInline.isError, true);
+    assert.match(oversizedInline.content[0].text, /exceeds/);
+    await writeFile(join(dir, ".dockerignore"), "#".repeat(64 * 1024 + 1));
     const oversized = await client.callTool({ name: "lint_dockerfile", arguments: { path: file } });
     assert.equal(oversized.isError, true);
     assert.match(oversized.content[0].text, /exceeds/);

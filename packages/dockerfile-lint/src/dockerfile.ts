@@ -166,7 +166,7 @@ function envPairs(args: string): [string, string | undefined][] {
   return pairs;
 }
 
-export function lint(parsed: Parsed, options: { ignore?: string[]; dockerignore_content?: string } = {}): Finding[] {
+export function lint(parsed: Parsed, options: { ignore?: string[]; dockerignore?: string } = {}): Finding[] {
   const findings: Finding[] = [];
   const ignore = new Set(options.ignore ?? []);
   const add = (rule: string, line: number, message: string) => {
@@ -174,7 +174,7 @@ export function lint(parsed: Parsed, options: { ignore?: string[]; dockerignore_
     findings.push({ rule, severity: RULES[rule].severity, line, message, fix: RULES[rule].fix });
   };
   const { instructions, stages } = parsed;
-  const exposed = exposedSensitiveRoots(options.dockerignore_content);
+  const exposed = exposedSensitiveRoots(options.dockerignore);
   if (instructions.length === 0) {
     add("empty-dockerfile", 1, "no instructions found");
     return findings;
