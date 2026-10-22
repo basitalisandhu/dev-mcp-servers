@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Added
+
+- openapi-lint rules for query-string API keys, HTTP Basic authentication and operations without documented error responses (#9).
+
 ## [0.2.2] - 2026-10-18
 
 ### Changed

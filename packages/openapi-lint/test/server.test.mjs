@@ -9,6 +9,35 @@ import { RULES, lint, parseDocument } from "../dist/lint.js";
 
 const FIXTURE = fileURLToPath(new URL("./fixtures/petstore.yaml", import.meta.url));
 
+test("lint checks credential placement and missing error responses, with ignore support", async () => {
+  const { client, close } = await connected();
+  const newRules = ["security-scheme-apikey-query", "security-scheme-http-basic", "operation-no-error-response"];
+  try {
+    const r = parse(await client.callTool({ name: "lint_openapi", arguments: { path: FIXTURE } }));
+    for (const rule of newRules) assert.ok(r.findings.some((f) => f.rule === rule), rule);
+    assert.equal(r.findings.find((f) => f.rule === newRules[0]).severity, "warning");
+    assert.equal(r.findings.find((f) => f.rule === newRules[1]).severity, "info");
+    const ignored = parse(await client.callTool({ name: "lint_openapi", arguments: { path: FIXTURE, ignore: newRules } }));
+    assert.ok(ignored.findings.every((f) => !newRules.includes(f.rule)));
+
+    for (const code of ["400", "503", "4XX", "5XX", "default"]) {
+      const findings = lint({ paths: { "/a": { get: { responses: { 200: { description: "OK" }, [code]: { description: "Error" } } } } } });
+      assert.ok(!findings.some((f) => f.rule === "operation-no-error-response"), code);
+    }
+    const referenced = lint({ components: { securitySchemes: {
+      "query/key~": { type: "apiKey", in: "query" },
+      alias: { $ref: "#/components/securitySchemes/query~1key~0" },
+      header: { type: "apiKey", in: "header" },
+      bearer: { type: "http", scheme: "bearer" },
+    } } });
+    assert.deepEqual(referenced.filter((f) => f.rule === newRules[0]).map((f) => f.path).sort(),
+      ["/components/securitySchemes/alias", "/components/securitySchemes/query~1key~0"]);
+    assert.ok(!referenced.some((f) => f.rule === newRules[1]));
+  } finally {
+    await close();
+  }
+});
+
 async function connected() {
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const server = createServer();

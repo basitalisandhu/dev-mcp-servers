@@ -25,6 +25,9 @@ export interface RuleDoc {
 }
 
 export const RULES: Record<string, RuleDoc> = {
+  "security-scheme-apikey-query": { severity: "warning", description: "An API key in the query string can leak into logs, proxies and browser history.", fix: "Put the API key in a request header instead." },
+  "security-scheme-http-basic": { severity: "info", description: "HTTP Basic sends a reusable, base64-encoded credential on every request.", fix: "Prefer short-lived tokens; if Basic is required, use HTTPS and document credential rotation." },
+  "operation-no-error-response": { severity: "info", description: "The operation documents no 4xx, 5xx or default response.", fix: "Document the common error responses, including authentication failures and rate limits where relevant." },
   "openapi-version": { severity: "error", description: "The document must declare an OpenAPI 3.x version in the top-level openapi field.", fix: "Add openapi: 3.0.3 (or 3.1.0). Swagger 2.0 documents use a different structure and must be converted." },
   "info-description": { severity: "info", description: "info has no description, so consumers see only a title.", fix: "Add info.description with the API's purpose, audience and authentication model." },
   "server-http": { severity: "warning", description: "A server URL uses plain http://, so credentials and data travel unencrypted.", fix: "Use https:// server URLs. Keep http only for an explicitly local development server." },
@@ -188,6 +191,15 @@ export function lint(doc: Doc, options: { ignore?: string[] } = {}): Finding[] {
   const components = isObject(doc.components) ? doc.components : {};
   const schemes = isObject(components.securitySchemes) ? Object.keys(components.securitySchemes) : [];
   if (schemes.length === 0) add("no-security-schemes", "/components/securitySchemes", "no security schemes are defined");
+  if (isObject(components.securitySchemes)) {
+    for (const name of schemes) {
+      const scheme = deref<Record<string, unknown>>(doc, components.securitySchemes[name]);
+      if (!isObject(scheme)) continue;
+      const pointer = `/components/securitySchemes/${name.replace(/~/g, "~0").replace(/\//g, "~1")}`;
+      if (scheme.type === "apiKey" && scheme.in === "query") add("security-scheme-apikey-query", pointer, `security scheme ${JSON.stringify(name)} puts its API key in the query string`);
+      if (scheme.type === "http" && typeof scheme.scheme === "string" && scheme.scheme.toLowerCase() === "basic") add("security-scheme-http-basic", pointer, `security scheme ${JSON.stringify(name)} uses HTTP Basic authentication`);
+    }
+  }
   const used = new Set<string>();
   const checkSecurity = (req: unknown, path: string) => {
     if (!Array.isArray(req)) return;
@@ -247,6 +259,7 @@ export function lint(doc: Doc, options: { ignore?: string[] } = {}): Finding[] {
         add("operation-no-responses", `${opPointer}/responses`, `${label} documents no responses`);
       } else {
         const codes = Object.keys(responses);
+        if (!codes.some((c) => c === "default" || /^[45](?:\d{2}|XX)$/.test(c))) add("operation-no-error-response", `${opPointer}/responses`, `${label} documents no 4xx, 5xx or default response`);
         if (!codes.some((c) => c === "default" || /^[23]/.test(c))) add("operation-no-success-response", `${opPointer}/responses`, `${label} documents only ${codes.join(", ")}`);
         for (const code of codes) {
           const r = deref<Record<string, unknown>>(doc, responses[code]);
