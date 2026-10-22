@@ -8,11 +8,15 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 
 | Tool | Input | What it returns |
 |---|---|---|
-| `lint_dockerfile` | `path` or `content`, `ignore?` | Findings with rule id, severity, line and fix: final stage running as root, `latest` or missing tags, no digest, credential-like `ENV`/`ARG` names and literals, missing `HEALTHCHECK`, `apt-get` without cleanup or `--no-install-recommends`, `apt-get upgrade`, `apk add` without `--no-cache`, `pip` without `--no-cache-dir`, `ADD` for plain files or URLs, `curl | sh`, `sudo`, relative `WORKDIR`, repeated `CMD`/`ENTRYPOINT`, shell-form `CMD`, `EXPOSE 22`, `MAINTAINER`, `COPY . .`, `COPY` after `USER` without `--chown`. |
+| `lint_dockerfile` | `path` or `content`, `ignore?`, `dockerignore?` | Findings with rule id, severity, line and fix: final stage running as root, `latest` or missing tags, no digest, credential-like `ENV`/`ARG` names and literals, missing `HEALTHCHECK`, `apt-get` without cleanup or `--no-install-recommends`, `apt-get upgrade`, `apk add` without `--no-cache`, `pip` without `--no-cache-dir`, `ADD` for plain files or URLs, `curl | sh`, `sudo`, relative `WORKDIR`, repeated `CMD`/`ENTRYPOINT`, shell-form `CMD`, `EXPOSE 22`, `MAINTAINER`, `COPY . .` (sensitive-root ignore coverage), `COPY` after `USER` without `--chown`. |
 | `parse_dockerfile` | `path` or `content` | Instructions with line ranges and stage index, stages with `AS` names and base images, escape character. |
 | `explain_rule` | `rule` | Severity, description and fix for one rule. |
 
 ## Install
+
+With `path`, `lint_dockerfile` reads `.dockerignore` beside the Dockerfile (up to 64 KB). Supply `dockerignore` to override it, or when using inline Dockerfile content; inline input never reads ignore files from the working directory. Missing ignore files preserve the warning; other read errors are returned.
+
+The `copy-whole-context` rule reports uncovered root patterns `.git`, `.env` (or `.env*`) and `node_modules`, and is suppressed only when all are covered. The dependency-free matcher supports exact names, `*` within a segment, `**`, leading/trailing slashes, comments and ordered `!` negations. This is conservative root-pattern analysis, not a directory walk or full Docker matcher: uncertain wildcard negations retain the warning, nested build contexts are not inferred, and suppressing this finding does not certify that the context contains no secrets. Prefer `.env*` to cover environment-specific files as well as `.env`.
 
 Claude Code:
 
@@ -38,7 +42,7 @@ Pin the version as shown so that an update cannot change what runs in your edito
 ## What it touches
 
 - Network: None.
-- Local files: Reads the one file you name, up to 1 MB.
+- Local files: Reads the Dockerfile you name, up to 1 MB, and its sibling `.dockerignore`, up to 64 KB, unless inline ignore text is supplied.
 - Telemetry: none.
 
 ## Notes
