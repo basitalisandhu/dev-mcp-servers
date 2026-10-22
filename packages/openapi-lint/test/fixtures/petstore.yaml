@@ -19,6 +19,13 @@ components:
       type: apiKey
       in: header
       name: X-Key
+    queryKey:
+      type: apiKey
+      in: query
+      name: api_key
+    basicAuth:
+      type: http
+      scheme: basic
   parameters:
     PetId:
       name: petId

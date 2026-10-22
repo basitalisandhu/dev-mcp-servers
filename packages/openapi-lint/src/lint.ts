@@ -38,15 +38,18 @@ export const RULES: Record<string, RuleDoc> = {
   "response-no-description": { severity: "warning", description: "A response has no description; the specification requires one.", fix: "Add a short description to every response." },
   "operation-no-description": { severity: "warning", description: "The operation has neither a summary nor a description.", fix: "Add a summary (one line) and, where useful, a description." },
   "operation-no-operation-id": { severity: "warning", description: "The operation has no operationId, which code generators and tooling use to name functions.", fix: "Add a unique, camelCase operationId such as listUsers." },
-  "duplicate-operation-id": { severity: "error", description: "Two operations share an operationId; identifiers must be unique across the document.", fix: "Rename one of them." },
-  "path-unversioned": { severity: "info", description: "Neither the path nor any server URL carries a version segment such as /v1, so breaking changes cannot be introduced side by side.", fix: "Version the API in the server URL (https://api.example.com/v1) or in the path (/v1/users)." },
-  "path-parameter-undefined": { severity: "error", description: "The path template contains a {parameter} that no path-level or operation-level parameter with in: path declares.", fix: "Declare the parameter with in: path and required: true." },
+  "duplicate-operation-id": { severity: "error", description: "The same operationId is used by more than one operation.", fix: "Give every operation a unique operationId." },
+  "path-unversioned": { severity: "info", description: "Neither the path nor any server URL contains a version segment such as /v1.", fix: "Version the API in the path or in the server URL so clients can pin a version." },
+  "path-parameter-undefined": { severity: "error", description: "The path contains a {parameter} that no path-level or operation-level parameter with in: path declares.", fix: "Declare the parameter with in: path and required: true." },
   "path-parameter-not-required": { severity: "error", description: "A parameter with in: path is not marked required: true, which the specification demands.", fix: "Set required: true on every path parameter." },
   "parameter-no-description": { severity: "info", description: "A parameter has no description.", fix: "Describe the parameter's meaning, format and default." },
   "parameter-no-schema": { severity: "warning", description: "A parameter has neither schema nor content, so its type is unknown.", fix: "Add a schema (type, format, enum) to the parameter." },
   "request-body-no-content": { severity: "warning", description: "A requestBody declares no content media types.", fix: "Add content with at least one media type and schema." },
   "deprecated-operation": { severity: "info", description: "The operation is marked deprecated.", fix: "Document the replacement in the description and plan removal." },
   "tag-undefined": { severity: "info", description: "An operation uses a tag that is not declared in the top-level tags list.", fix: "Declare the tag with a description under tags, which groups operations in generated documentation." },
+  "security-scheme-apikey-query": { severity: "warning", description: "An apiKey security scheme places the credential in the query string, which is recorded in server logs, proxy logs and browser history.", fix: "Move the API key to a header (in: header) or to a cookie. Query-string credentials are hard to keep out of logs." },
+  "security-scheme-http-basic": { severity: "info", description: "An HTTP Basic scheme sends the username and password on every request, base64-encoded rather than hashed.", fix: "Prefer a bearer token or OAuth 2.0. Basic is acceptable only for internal tools or when the transport is strictly HTTPS and the credentials are short-lived." },
+  "operation-no-error-response": { severity: "info", description: "The operation documents no 4xx, 5xx or default response, so clients cannot know what an error looks like.", fix: "Document at least one error response (for example 400, 401, 404 or 500) or a default response with its content." },
 };
 
 export type Doc = Record<string, unknown>;
@@ -99,67 +102,13 @@ export function deref<T = unknown>(doc: Doc, value: unknown, depth = 0): T {
   if (!isObject(value) || typeof value.$ref !== "string" || depth > 16) return value as T;
   const ref = value.$ref;
   if (!ref.startsWith("#/")) return value as T;
-  let node: unknown = doc;
-  for (const part of ref.slice(2).split("/")) {
-    const key = part.replace(/~1/g, "/").replace(/~0/g, "~");
-    if (!isObject(node) || !(key in node)) return value as T;
-    node = node[key];
+  const parts = ref.slice(2).split("/").map((p) => p.replace(/~1/g, "/").replace(/~0/g, "~"));
+  let cur: unknown = doc;
+  for (const p of parts) {
+    if (!isObject(cur) || !(p in cur)) return value as T;
+    cur = cur[p];
   }
-  return deref(doc, node, depth + 1);
-}
-
-export interface OperationSummary {
-  method: string;
-  path: string;
-  operation_id: string | null;
-  summary: string | null;
-  tags: string[];
-  deprecated: boolean;
-  security: string[][] | "inherited-none" | "public";
-  parameters: { name: string; in: string; required: boolean }[];
-  request_body: string[] | null;
-  responses: string[];
-}
-
-function securityNames(req: unknown): string[][] | null {
-  if (!Array.isArray(req)) return null;
-  return req.map((r) => (isObject(r) ? Object.keys(r) : []));
-}
-
-export function listOperations(doc: Doc): OperationSummary[] {
-  const out: OperationSummary[] = [];
-  const paths = isObject(doc.paths) ? doc.paths : {};
-  const globalSecurity = securityNames(doc.security);
-  for (const [path, rawItem] of Object.entries(paths)) {
-    const item = deref<Record<string, unknown>>(doc, rawItem);
-    if (!isObject(item)) continue;
-    const pathParams = Array.isArray(item.parameters) ? item.parameters : [];
-    for (const method of METHODS) {
-      const op = item[method];
-      if (!isObject(op)) continue;
-      const params = [...pathParams, ...(Array.isArray(op.parameters) ? op.parameters : [])].map((p) => deref<Record<string, unknown>>(doc, p)).filter(isObject);
-      const opSecurity = securityNames(op.security);
-      const body = deref<Record<string, unknown>>(doc, op.requestBody);
-      const responses = isObject(op.responses) ? Object.keys(op.responses) : [];
-      let security: OperationSummary["security"];
-      if (opSecurity !== null) security = opSecurity.length === 0 ? "public" : opSecurity;
-      else if (globalSecurity !== null && globalSecurity.length > 0) security = globalSecurity;
-      else security = "inherited-none";
-      out.push({
-        method: method.toUpperCase(),
-        path,
-        operation_id: typeof op.operationId === "string" ? op.operationId : null,
-        summary: typeof op.summary === "string" ? op.summary : typeof op.description === "string" ? op.description.split("\n")[0].slice(0, 120) : null,
-        tags: Array.isArray(op.tags) ? op.tags.map(String) : [],
-        deprecated: op.deprecated === true,
-        security,
-        parameters: params.map((p) => ({ name: String(p.name ?? ""), in: String(p.in ?? ""), required: p.required === true || p.in === "path" })),
-        request_body: isObject(body) && isObject(body.content) ? Object.keys(body.content) : null,
-        responses,
-      });
-    }
-  }
-  return out;
+  return deref<T>(doc, cur, depth + 1);
 }
 
 export function lint(doc: Doc, options: { ignore?: string[] } = {}): Finding[] {
@@ -188,6 +137,15 @@ export function lint(doc: Doc, options: { ignore?: string[] } = {}): Finding[] {
   const components = isObject(doc.components) ? doc.components : {};
   const schemes = isObject(components.securitySchemes) ? Object.keys(components.securitySchemes) : [];
   if (schemes.length === 0) add("no-security-schemes", "/components/securitySchemes", "no security schemes are defined");
+  else {
+    const schemeDefs = isObject(components.securitySchemes) ? components.securitySchemes : {};
+    for (const name of schemes) {
+      const s = schemeDefs[name];
+      if (!isObject(s)) continue;
+      if (s.type === "apiKey" && s.in === "query") add("security-scheme-apikey-query", `/components/securitySchemes/${name}`, `security scheme ${JSON.stringify(name)} puts the API key in the query string`);
+      if (s.type === "http" && typeof s.scheme === "string" && s.scheme.toLowerCase() === "basic") add("security-scheme-http-basic", `/components/securitySchemes/${name}`, `security scheme ${JSON.stringify(name)} uses HTTP Basic`);
+    }
+  }
   const used = new Set<string>();
   const checkSecurity = (req: unknown, path: string) => {
     if (!Array.isArray(req)) return;
@@ -229,15 +187,17 @@ export function lint(doc: Doc, options: { ignore?: string[] } = {}): Finding[] {
       } else if (Array.isArray(op.security) && op.security.length === 0) add("operation-public", `${opPointer}/security`, `${label} is explicitly public (security: [])`);
       else checkSecurity(op.security, `${opPointer}/security`);
 
-      const params = [...pathParams, ...(Array.isArray(op.parameters) ? op.parameters : [])].map((p) => deref<Record<string, unknown>>(doc, p)).filter(isObject);
-      const declaredPath = new Set(params.filter((p) => p.in === "path").map((p) => String(p.name)));
-      for (const t of templated) if (!declaredPath.has(t)) add("path-parameter-undefined", opPointer, `${label}: path parameter {${t}} is not declared`);
-      params.forEach((p, i) => {
-        const pp = `${opPointer}/parameters/${i}`;
-        if (p.in === "path" && p.required !== true) add("path-parameter-not-required", pp, `${label}: path parameter ${String(p.name)} must be required`);
-        if (typeof p.description !== "string" || p.description.trim() === "") add("parameter-no-description", pp, `${label}: parameter ${String(p.name)} has no description`);
-        if (p.schema === undefined && p.content === undefined) add("parameter-no-schema", pp, `${label}: parameter ${String(p.name)} has no schema`);
-      });
+      const params = [...pathParams, ...(Array.isArray(op.parameters) ? op.parameters : [])];
+      const pathParamNames = new Set<string>();
+      for (const raw of params) {
+        const p = deref<Record<string, unknown>>(doc, raw);
+        if (!isObject(p)) continue;
+        if (p.in === "path") pathParamNames.add(String(p.name));
+        if (typeof p.description !== "string" || p.description.trim() === "") add("parameter-no-description", `${opPointer}/parameters`, `${label}: parameter ${JSON.stringify(p.name)} has no description`);
+        if (!isObject(p.schema) && !isObject(p.content)) add("parameter-no-schema", `${opPointer}/parameters`, `${label}: parameter ${JSON.stringify(p.name)} has neither schema nor content`);
+        if (p.in === "path" && p.required !== true) add("path-parameter-not-required", `${opPointer}/parameters`, `${label}: path parameter ${JSON.stringify(p.name)} is not required`);
+      }
+      for (const name of templated) if (!pathParamNames.has(name)) add("path-parameter-undefined", pathPointer, `${path} has no path parameter named ${JSON.stringify(name)}`);
 
       const body = deref<Record<string, unknown>>(doc, op.requestBody);
       if (isObject(body) && (!isObject(body.content) || Object.keys(body.content).length === 0)) add("request-body-no-content", `${opPointer}/requestBody`, `${label}: requestBody has no content`);
@@ -248,6 +208,7 @@ export function lint(doc: Doc, options: { ignore?: string[] } = {}): Finding[] {
       } else {
         const codes = Object.keys(responses);
         if (!codes.some((c) => c === "default" || /^[23]/.test(c))) add("operation-no-success-response", `${opPointer}/responses`, `${label} documents only ${codes.join(", ")}`);
+        if (!codes.some((c) => /^[45]/.test(c) || c === "default")) add("operation-no-error-response", `${opPointer}/responses`, `${label} documents no 4xx, 5xx or default response`);
         for (const code of codes) {
           const r = deref<Record<string, unknown>>(doc, responses[code]);
           if (isObject(r) && (typeof r.description !== "string" || r.description.trim() === "")) add("response-no-description", `${opPointer}/responses/${code}`, `${label}: response ${code} has no description`);
