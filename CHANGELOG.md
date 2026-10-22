@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Added
+
+- jwt-tools signs and verifies ES256, ES384 and ES512 with matching EC curves and IEEE-P1363 JWS signatures (#6).
+
 ## [0.2.2] - 2026-10-18
 
 ### Changed

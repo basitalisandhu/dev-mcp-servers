@@ -5,10 +5,13 @@ import { createHmac, createPrivateKey, createPublicKey, sign as cryptoSign, timi
 
 export const HMAC_ALGORITHMS = ["HS256", "HS384", "HS512"] as const;
 export const RSA_ALGORITHMS = ["RS256", "RS384", "RS512"] as const;
-export const ALGORITHMS = [...HMAC_ALGORITHMS, ...RSA_ALGORITHMS] as const;
+export const EC_ALGORITHMS = ["ES256", "ES384", "ES512"] as const;
+export const ALGORITHMS = [...HMAC_ALGORITHMS, ...RSA_ALGORITHMS, ...EC_ALGORITHMS] as const;
 export type Algorithm = (typeof ALGORITHMS)[number];
 
-const HASH: Record<Algorithm, string> = { HS256: "sha256", HS384: "sha384", HS512: "sha512", RS256: "sha256", RS384: "sha384", RS512: "sha512" };
+const HASH: Record<Algorithm, string> = { HS256: "sha256", HS384: "sha384", HS512: "sha512", RS256: "sha256", RS384: "sha384", RS512: "sha512", ES256: "sha256", ES384: "sha384", ES512: "sha512" };
+const EC_CURVES: Record<string, string> = { ES256: "prime256v1", ES384: "secp384r1", ES512: "secp521r1" };
+const EC_SIGNATURE_BYTES: Record<string, number> = { ES256: 64, ES384: 96, ES512: 132 };
 
 export interface Decoded {
   header: Record<string, unknown>;
@@ -153,9 +156,20 @@ export function keyObjectFor(algorithm: Algorithm, key: string, usage: "sign" | 
   }
 }
 
+function ecKeyProblem(algorithm: Algorithm, key: KeyObject): string | undefined {
+  if (key.asymmetricKeyType !== "ec") return `${algorithm} needs an EC key, got ${key.asymmetricKeyType ?? "unknown"}`;
+  if (key.asymmetricKeyDetails?.namedCurve !== EC_CURVES[algorithm]) return `${algorithm} needs curve ${EC_CURVES[algorithm]}, got ${key.asymmetricKeyDetails?.namedCurve ?? "unknown"}`;
+  return undefined;
+}
+
 export function computeSignature(algorithm: Algorithm, signingInput: string, key: KeyObject | Buffer): Buffer {
   if (algorithm.startsWith("HS")) return createHmac(HASH[algorithm], key as Buffer).update(signingInput).digest();
   const keyObj = key as KeyObject;
+  if (algorithm.startsWith("ES")) {
+    const problem = ecKeyProblem(algorithm, keyObj);
+    if (problem) throw new Error(problem);
+    return cryptoSign(HASH[algorithm], Buffer.from(signingInput), { key: keyObj, dsaEncoding: "ieee-p1363" });
+  }
   if (keyObj.asymmetricKeyType !== "rsa") throw new Error(`${algorithm} needs an RSA key, got ${keyObj.asymmetricKeyType ?? "unknown"}`);
   return cryptoSign(HASH[algorithm], Buffer.from(signingInput), keyObj);
 }
@@ -190,7 +204,12 @@ export function verifyJwt(token: string, key: string, algorithm: Algorithm, opti
     signatureValid = expected.length === d.signature.length && timingSafeEqual(expected, d.signature);
   } else {
     const k = keyObj as KeyObject;
-    if (k.asymmetricKeyType !== "rsa") reasons.push(`${algorithm} needs an RSA key, got ${k.asymmetricKeyType ?? "unknown"}`);
+    if (algorithm.startsWith("ES")) {
+      const problem = ecKeyProblem(algorithm, k);
+      if (problem) reasons.push(problem);
+      else if (d.signature.length !== EC_SIGNATURE_BYTES[algorithm]) reasons.push(`${algorithm} needs a ${EC_SIGNATURE_BYTES[algorithm]}-byte IEEE-P1363 signature`);
+      else signatureValid = cryptoVerify(HASH[algorithm], Buffer.from(d.signing_input), { key: k, dsaEncoding: "ieee-p1363" }, d.signature);
+    } else if (k.asymmetricKeyType !== "rsa") reasons.push(`${algorithm} needs an RSA key, got ${k.asymmetricKeyType ?? "unknown"}`);
     else signatureValid = cryptoVerify(HASH[algorithm], Buffer.from(d.signing_input), k, d.signature);
   }
   if (!signatureValid && reasons.length === 0) reasons.push("signature does not match the supplied key");
