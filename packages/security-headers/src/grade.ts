@@ -65,7 +65,7 @@ export const HEADER_DOCS: Record<GradedHeader, { purpose: string; recommended: s
     reference: "https://developer.mozilla.org/docs/Web/HTTP/Headers/Referrer-Policy",
   },
   "permissions-policy": {
-    purpose: "Disables browser features such as camera, microphone, geolocation and payment for the page and for embedded frames.",
+    purpose: "Disables browser features such as camera, microphone, geolocation and payment for the page and for embedded frames. A * allowlist permits every origin and should be avoided for sensitive features.",
     recommended: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
     reference: "https://developer.mozilla.org/docs/Web/HTTP/Headers/Permissions-Policy",
   },
@@ -248,10 +248,25 @@ function referrerCheck(value: string | null): Check {
   return { ...base, status: "warn", points: 2, explanation: `Unrecognised policy ${JSON.stringify(effective)}; browsers fall back to the default.`, recommendation: "Use strict-origin-when-cross-origin." };
 }
 
+function parsePermissionsPolicy(value: string): Map<string, string[]> {
+  const directives = new Map<string, string[]>();
+  // Quoted origins are consumed as a unit, including any comma inside them.
+  const directive = /(?:^|,)\s*([a-z][a-z0-9-]*)\s*=\s*(\*|self|\((?:[^()"\\]|"(?:\\.|[^"\\])*")*\))\s*(?=,|$)/g;
+  for (const match of value.matchAll(directive)) {
+    const raw = match[2].replace(/^\(|\)$/g, "");
+    directives.set(match[1], raw.match(/"(?:\\.|[^"\\])*"|[^\s]+/g) ?? []);
+  }
+  return directives;
+}
+
 function permissionsCheck(value: string | null): Check {
   const base = { header: "permissions-policy", value, max_points: 5 };
   if (!value) return { ...base, status: "warn", points: 0, explanation: "Missing. Embedded frames and the page itself may request camera, microphone, geolocation and other features.", recommendation: `Add: ${HEADER_DOCS["permissions-policy"].recommended}` };
-  return { ...base, status: "pass", points: 5, explanation: `Present with ${value.split(",").length} directive(s).`, recommendation: "Review that unused features are disabled with ()." };
+  const directives = parsePermissionsPolicy(value);
+  const sensitive = ["camera", "microphone", "geolocation", "payment", "usb", "display-capture", "midi"];
+  const wideOpen = sensitive.filter((feature) => directives.get(feature)?.includes("*"));
+  if (wideOpen.length) return { ...base, status: "warn", points: 0, explanation: `Wildcard allowlists permit every origin for: ${wideOpen.join(", ")}.`, recommendation: "Disable unused sensitive features with () or restrict them to trusted origins." };
+  return { ...base, status: "pass", points: 5, explanation: `Present with ${directives.size} recognised directive(s).`, recommendation: "Review that unused features are disabled with ()." };
 }
 
 function coopCheck(value: string | null): Check {
