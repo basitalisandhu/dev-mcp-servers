@@ -1,6 +1,7 @@
 /**
  * Dockerfile parsing (comments, escape directive, line continuations, heredocs, stages) and lint rules.
  */
+import { exposedSensitiveRoots } from "./dockerignore.js";
 
 export const MAX_DOCKERFILE_BYTES = 1024 * 1024;
 
@@ -165,7 +166,7 @@ function envPairs(args: string): [string, string | undefined][] {
   return pairs;
 }
 
-export function lint(parsed: Parsed, options: { ignore?: string[] } = {}): Finding[] {
+export function lint(parsed: Parsed, options: { ignore?: string[]; dockerignore_content?: string } = {}): Finding[] {
   const findings: Finding[] = [];
   const ignore = new Set(options.ignore ?? []);
   const add = (rule: string, line: number, message: string) => {
@@ -173,6 +174,7 @@ export function lint(parsed: Parsed, options: { ignore?: string[] } = {}): Findi
     findings.push({ rule, severity: RULES[rule].severity, line, message, fix: RULES[rule].fix });
   };
   const { instructions, stages } = parsed;
+  const exposed = exposedSensitiveRoots(options.dockerignore_content);
   if (instructions.length === 0) {
     add("empty-dockerfile", 1, "no instructions found");
     return findings;
@@ -234,7 +236,7 @@ export function lint(parsed: Parsed, options: { ignore?: string[] } = {}): Findi
       }
       case "COPY": {
         const parts = splitArgs(a);
-        if (parts.length >= 2 && (parts[0] === "." || parts[0] === "./" || parts[0] === "*") && !/--from=/.test(a)) add("copy-whole-context", ins.line, `COPY ${parts[0]} ${parts[parts.length - 1]} copies the whole build context`);
+        if (parts.length >= 2 && (parts[0] === "." || parts[0] === "./" || parts[0] === "*") && !/--from=/.test(a) && exposed.length) add("copy-whole-context", ins.line, `COPY ${parts[0]} ${parts[parts.length - 1]} copies the whole build context; sensitive root patterns not covered by .dockerignore: ${exposed.join(", ")}`);
         break;
       }
       case "WORKDIR":

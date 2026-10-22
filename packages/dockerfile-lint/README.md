@@ -14,6 +14,10 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 
 ## Install
 
+With `path`, `lint_dockerfile` reads `.dockerignore` beside the Dockerfile (up to 1 MB). Supply `dockerignore_content` to override it, or when using inline Dockerfile content; inline input never reads ignore files from the working directory. Missing ignore files preserve the warning; other read errors are returned.
+
+The `copy-whole-context` rule reports uncovered root patterns `.git`, `.env*` and `node_modules`, and is suppressed only when all are covered. Matching supports glob patterns, comments and ordered `!` negations. This is conservative root-pattern analysis, not a directory walk or full Docker matcher: uncertain wildcard negations retain the warning, nested build contexts are not inferred, and suppressing this finding does not certify that the context contains no secrets.
+
 Claude Code:
 
 ```bash
