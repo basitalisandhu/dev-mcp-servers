@@ -51,6 +51,25 @@ async function connected(fetchImpl) {
 }
 const parse = (result) => JSON.parse(result.content[0].text);
 
+test("scan_lockfile queries exact Cargo registry pins over mocked OSV", async () => {
+  const calls = [];
+  const { client, close } = await connected(fakeFetch(calls));
+  try {
+    const response = await client.callTool({ name: "scan_lockfile", arguments: {
+      filename: "Cargo.lock",
+      content: 'version = 4\n[[package]]\nname = "example"\nversion = "1.2.3"\nsource = "registry+https://index.crates.io/"\n',
+    } });
+    assert.notEqual(response.isError, true, response.content[0].text);
+    const result = parse(response);
+    assert.equal(result.format, "cargo");
+    assert.equal(result.packages, 1);
+    assert.equal(result.affected_packages, 1);
+    assert.deepEqual(calls[0].body.queries, [{ package: { ecosystem: "crates.io", name: "example" }, version: "1.2.3" }]);
+  } finally {
+    await close();
+  }
+});
+
 test("exposes the four documented tools, all read-only", async () => {
   const { client, close } = await connected(fakeFetch([]));
   try {

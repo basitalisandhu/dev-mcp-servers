@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Added
+
+- osv-advisories scans Cargo.lock registry pins and Gemfile.lock GEM specs, with format detection and explicit skipped-source reasons (#4).
+
 ## [0.2.2] - 2026-10-18
 
 ### Changed
