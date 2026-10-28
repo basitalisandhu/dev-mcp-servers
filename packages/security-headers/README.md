@@ -45,6 +45,7 @@ Pin the version as shown so that an update cannot change what runs in your edito
 
 - Scores: CSP 25, HSTS 20, X-Frame-Options 10, X-Content-Type-Options 10, Referrer-Policy 10, Set-Cookie 10, Permissions-Policy 5, COOP 5, CORP 5. Grades: A+ (95% and no fail), A (85% and no fail), B (70%), C (55%), D (40%), otherwise F.
 - A report-only CSP earns nothing: it is not enforced.
+- Permissions-Policy loses its five points when camera, microphone, geolocation, payment, usb, display-capture or midi permits every origin with `*`. Disabled `()` and explicit origin allowlists retain the points; this is a heuristic, not a full browser policy validator.
 - A good grade means the headers are configured well, not that the application is secure.
 
 ## Build and test
