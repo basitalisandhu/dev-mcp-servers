@@ -2,16 +2,17 @@
 /**
  * dockerfile-lint: parse and lint Dockerfiles.
  *
- * Transport: stdio only. No network. Reads one local file per call when a path is given; never runs docker.
+ * Transport: stdio only. No network. Reads a Dockerfile and optional sibling .dockerignore; never runs docker.
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { readFile, stat } from "node:fs/promises";
-import { resolve } from "node:path";
+import { resolve, dirname, join } from "node:path";
 import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
 import { MAX_DOCKERFILE_BYTES, RULES, lint, parseDockerfile } from "./dockerfile.js";
+import { MAX_DOCKERIGNORE_BYTES } from "./dockerignore.js";
 
 export const SERVER_NAME = "dockerfile-lint";
 export const SERVER_VERSION = "0.2.2";
@@ -42,6 +43,26 @@ async function load(input: { path?: string; content?: string }): Promise<{ text:
   return { text: await readFile(abs, "utf8"), source: abs };
 }
 
+async function readDockerignore(path: string | undefined, content: string | undefined): Promise<string | undefined> {
+  if (content !== undefined) {
+    if (Buffer.byteLength(content, "utf8") > MAX_DOCKERIGNORE_BYTES) throw new Error(`.dockerignore exceeds ${MAX_DOCKERIGNORE_BYTES} bytes`);
+    return content;
+  }
+  if (!path) return undefined; // Inline Dockerfiles must never read from cwd.
+  const sibling = join(dirname(resolve(path)), ".dockerignore");
+  try {
+    const info = await stat(sibling);
+    if (!info.isFile()) throw new Error(".dockerignore path is not a file");
+    if (info.size > MAX_DOCKERIGNORE_BYTES) throw new Error(`.dockerignore exceeds ${MAX_DOCKERIGNORE_BYTES} bytes`);
+    const text = await readFile(sibling, "utf8");
+    if (Buffer.byteLength(text, "utf8") > MAX_DOCKERIGNORE_BYTES) throw new Error(`.dockerignore exceeds ${MAX_DOCKERIGNORE_BYTES} bytes`);
+    return text;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    throw err;
+  }
+}
+
 export function createServer(): McpServer {
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
@@ -61,15 +82,20 @@ export function createServer(): McpServer {
         "Checks: final stage running as root, base images without a tag or with :latest, images without a digest, credential-like names in ENV or ARG, credential literals in RUN, " +
         "missing HEALTHCHECK, apt-get install without list cleanup or --no-install-recommends, apt-get upgrade, apk add without --no-cache, pip without --no-cache-dir, ADD for plain files " +
         "or remote URLs, curl piped to a shell, sudo, relative WORKDIR, repeated CMD or ENTRYPOINT, shell-form CMD, EXPOSE 22, MAINTAINER, copying the whole build context, " +
-        "and COPY after USER without --chown. Pass ignore to silence rule ids.",
-      inputSchema: { ...sourceShape, ignore: z.array(z.enum(ruleNames)).max(50).optional().describe("Rule ids to skip.") },
+        "and COPY after USER without --chown. Path input reads a sibling .dockerignore (up to 64 KB); dockerignore overrides it. Inline input never reads ignore files. Sensitive-root analysis adjusts whole-context COPY warnings conservatively without scanning files. Pass ignore to silence rule ids.",
+      inputSchema: {
+        ...sourceShape,
+        dockerignore: z.string().max(MAX_DOCKERIGNORE_BYTES).optional().describe("Inline .dockerignore text; overrides the sibling file, including when empty."),
+        ignore: z.array(z.enum(ruleNames)).max(50).optional().describe("Rule ids to skip."),
+      },
       annotations: localRead,
     },
-    async ({ path, content, ignore }) => {
+    async ({ path, content, ignore, dockerignore }) => {
       try {
         const { text, source } = await load({ path, content });
         const parsed = parseDockerfile(text);
-        const findings = lint(parsed, { ignore });
+        const ignoreText = await readDockerignore(path, dockerignore);
+        const findings = lint(parsed, { ignore, dockerignore: ignoreText });
         const counts = { error: 0, warning: 0, info: 0 };
         for (const f of findings) counts[f.severity]++;
         return json({ source, instructions: parsed.instructions.length, stages: parsed.stages.map((s) => ({ index: s.index, name: s.name, base: s.base, line: s.line })), ...counts, findings });
