@@ -34,7 +34,7 @@ export function createServer(): McpServer {
     { name: SERVER_NAME, version: SERVER_VERSION },
     {
       instructions:
-        "Reads OpenAPI 3.0 and 3.1 documents (JSON or YAML, from a local path or inline). lint_openapi reports security and completeness problems with JSON Pointer paths; " +
+        "Reads OpenAPI 3.0 and 3.1 documents (JSON or YAML, from a local path or inline). lint_openapi reports security and completeness problems, including query-string API keys, HTTP Basic and missing error responses, with JSON Pointer paths; " +
         `list_operations tabulates every operation with its effective security; get_operation returns one operation in full; explain_rule documents a rule. Rules: ${ruleNames.join(", ")}. ` +
         "Only local #/ references are resolved. Findings describe the document, not the running API.",
     },

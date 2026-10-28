@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows Keep
 
 ### Added
 
+- openapi-lint rules for query-string API keys, HTTP Basic authentication and operations without documented error responses (#9).
 - osv-advisories scans Cargo.lock registry pins and Gemfile.lock GEM specs, with format detection and explicit skipped-source reasons (#4).
 - jwt-tools signs and verifies ES256, ES384 and ES512 with matching EC curves and IEEE-P1363 JWS signatures (#6).
 

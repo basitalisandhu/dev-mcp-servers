@@ -6,6 +6,8 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 
 ## Tools
 
+`lint_openapi` also warns about query-string API keys (`security-scheme-apikey-query`), notes HTTP Basic authentication (`security-scheme-http-basic`), and notes operations without a 4xx, 5xx or default response (`operation-no-error-response`). Error ranges `4XX` and `5XX` count as documented errors. Each rule can be suppressed with `ignore` and explained with `explain_rule`.
+
 | Tool | Input | What it returns |
 |---|---|---|
 | `lint_openapi` | `path` or `document`, `ignore?` | Findings sorted by severity with rule id, JSON Pointer path and message: openapi version, http servers, missing, unused or undefined security schemes, operations without security (and explicitly public ones), operations without responses or success responses, undescribed responses and parameters, path parameters not declared or not required, missing or duplicate operationIds, unversioned paths, empty request bodies, deprecated operations, undeclared tags. |
