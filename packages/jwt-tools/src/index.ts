@@ -32,7 +32,7 @@ export function createServer(): McpServer {
     {
       instructions:
         "Inspects JSON Web Tokens locally. decode_jwt shows the header and claims without verifying anything and lists risk findings (alg none, expired, missing exp, aud or iss, long lifetimes, key URLs in the header, sensitive claims). " +
-        "verify_jwt checks the signature with a key you supply for one expected algorithm (HS256/384/512 with a shared secret, RS256/384/512 with a PEM public key) and then the time, audience and issuer claims. " +
+        "verify_jwt checks the signature with a key you supply for one expected algorithm (HS256/384/512 with a shared secret, RS256/384/512 or ES256/384/512 with a PEM public key) and then the time, audience and issuer claims. " +
         "sign_test_jwt mints a token for test fixtures. Nothing leaves the process.",
     },
   );
@@ -78,11 +78,11 @@ export function createServer(): McpServer {
       title: "Verify a JWT signature and claims",
       description:
         "Verify the signature of a JWS compact token with the supplied key for exactly the given algorithm, then check exp (required), nbf, and optionally aud and iss. " +
-        "HS256/HS384/HS512 take the shared secret as key; RS256/RS384/RS512 take a PEM public key, certificate or private key. A token whose header alg differs from " +
+        "HS256/HS384/HS512 take the shared secret as key; RS256/RS384/RS512 and ES256/ES384/ES512 take a PEM public key, certificate or private key. ES* requires P-256/P-384/P-521 respectively and raw JWS signatures. A token whose header alg differs from " +
         "algorithm fails without any cryptographic check, which blocks algorithm-confusion attacks. Returns valid (both signature and claims), signature_valid, claims_valid and the reasons.",
       inputSchema: {
         token: tokenSchema,
-        key: z.string().min(1).max(MAX_KEY).describe("Shared secret (HS*) or PEM-encoded key (RS*)."),
+        key: z.string().min(1).max(MAX_KEY).describe("Shared secret (HS*) or PEM-encoded key (RS*/ES*)."),
         algorithm: z.enum(ALGORITHMS).describe("The one algorithm the verifier accepts."),
         audience: z.string().max(500).optional().describe("Required aud value (matches a string aud or one element of an array aud)."),
         issuer: z.string().max(500).optional().describe("Required iss value."),
@@ -106,7 +106,7 @@ export function createServer(): McpServer {
       title: "Sign a JWT for test fixtures",
       description:
         "Create a signed JWS compact token from a claims object for use in tests and local development. iat is set to now unless the payload supplies one; exp is set from " +
-        "expires_in_seconds when given. HS* algorithms use key as the shared secret; RS* algorithms need a PEM private key. Returns the token and the final header and claims.",
+        "expires_in_seconds when given. HS* algorithms use key as the shared secret; RS* and ES* algorithms need a PEM private key. ES256/384/512 requires P-256/P-384/P-521 respectively and uses raw JWS signatures. Returns the token and the final header and claims.",
       inputSchema: {
         payload: z.record(z.string().max(200), z.unknown()).describe("Claims to sign, for example {\"sub\":\"user-1\",\"aud\":\"api\"}."),
         key: z.string().min(1).max(MAX_KEY),

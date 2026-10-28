@@ -52,6 +52,31 @@ async function connected(fetchImpl) {
 }
 const parse = (r) => JSON.parse(r.content[0].text);
 
+test("grade_headers reduces Permissions-Policy points for sensitive wildcard features", async () => {
+  const { client, close } = await connected(fakeFetch());
+  try {
+    for (const [value, names] of [
+      ["camera=*", ["camera"]],
+      ['camera=(), microphone = *, geolocation=(self "https://maps.example"), payment=*', ["microphone", "payment"]],
+      ["usb=*, display-capture=*, midi=*", ["usb", "display-capture", "midi"]],
+    ]) {
+      const report = parse(await client.callTool({ name: "grade_headers", arguments: { headers: { "permissions-policy": value } } }));
+      const check = report.checks.find((c) => c.header === "permissions-policy");
+      assert.equal(check.status, "warn", value);
+      assert.ok(check.points < 5, value);
+      for (const name of names) assert.ok(check.explanation.includes(name), name);
+    }
+    for (const value of ["camera=()", 'camera=(self "https://camera.example"), geolocation=self', "autoplay=*"]) {
+      const report = parse(await client.callTool({ name: "grade_headers", arguments: { headers: { "permissions-policy": value } } }));
+      const check = report.checks.find((c) => c.header === "permissions-policy");
+      assert.equal(check.status, "pass", value);
+      assert.equal(check.points, 5, value);
+    }
+  } finally {
+    await close();
+  }
+});
+
 test("lists three tools and names the server", async () => {
   const { client, close } = await connected(fakeFetch());
   try {
