@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Added
+
+- jwt-tools signs and verifies ES256, ES384 and ES512 with matching EC curves and IEEE-P1363 JWS signatures (#6).
+
 ### Fixed
 
 - dockerfile-lint considers sibling or inline .dockerignore rules before warning about sensitive roots in a whole-context COPY, conservatively preserving warnings for negations (#8).

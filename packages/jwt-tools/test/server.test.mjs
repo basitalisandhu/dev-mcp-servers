@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { generateKeyPairSync } from "node:crypto";
+import { generateKeyPairSync, sign as cryptoSign, verify as cryptoVerify } from "node:crypto";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer, SERVER_NAME } from "../dist/index.js";
@@ -22,6 +22,52 @@ async function connected() {
 }
 const parse = (r) => JSON.parse(r.content[0].text);
 const codes = (r) => r.findings.map((f) => f.code);
+
+for (const [algorithm, curve, hash, bytes] of [
+  ["ES256", "P-256", "sha256", 64],
+  ["ES384", "P-384", "sha384", 96],
+  ["ES512", "P-521", "sha512", 132],
+]) {
+  test(`${algorithm} signs and verifies P1363 tokens, rejecting wrong curves and algorithms`, async () => {
+    const keys = generateKeyPairSync("ec", { namedCurve: curve });
+    const pub = keys.publicKey.export({ type: "spki", format: "pem" });
+    const priv = keys.privateKey.export({ type: "pkcs8", format: "pem" });
+    const other = generateKeyPairSync("ec", { namedCurve: curve }).publicKey.export({ type: "spki", format: "pem" });
+    const wrongCurve = generateKeyPairSync("ec", { namedCurve: curve === "P-256" ? "P-384" : "P-256" });
+    const wrongPub = wrongCurve.publicKey.export({ type: "spki", format: "pem" });
+    const wrongPriv = wrongCurve.privateKey.export({ type: "pkcs8", format: "pem" });
+    const { client, close } = await connected();
+    try {
+      const signed = await client.callTool({ name: "sign_test_jwt", arguments: {
+        payload: { sub: "ec" }, key: priv, algorithm, now: NOW, expires_in_seconds: 60,
+      } });
+      assert.notEqual(signed.isError, true, signed.content[0].text);
+      const { token } = parse(signed);
+      const decoded = decodeJwt(token);
+      assert.equal(decoded.signature_bytes, bytes);
+      assert.ok(cryptoVerify(hash, Buffer.from(decoded.signing_input), { key: pub, dsaEncoding: "ieee-p1363" }, decoded.signature));
+      const verified = parse(await client.callTool({ name: "verify_jwt", arguments: { token, key: pub, algorithm, now: NOW } }));
+      assert.equal(verified.valid, true);
+      assert.equal(verifyJwt(token, priv, algorithm, { now: NOW }).valid, true);
+      assert.equal(verifyJwt(token, other, algorithm, { now: NOW }).signature_valid, false);
+      assert.equal(verifyJwt(token, pub, algorithm, { now: NOW + 61 }).claims_valid, false);
+      assert.match(verifyJwt(token, pub, algorithm === "ES256" ? "ES384" : "ES256").reasons[0], /header alg/);
+      assert.match(verifyJwt(token, wrongPub, algorithm, { now: NOW }).reasons[0], /curve/);
+      assert.match(verifyJwt(token, PUB, algorithm, { now: NOW }).reasons[0], /EC key/);
+      assert.throws(() => signJwt({}, wrongPriv, algorithm), /curve/);
+      assert.throws(() => signJwt({}, PRIV, algorithm), /EC key/);
+      const invalidKey = await client.callTool({ name: "sign_test_jwt", arguments: { payload: {}, key: wrongPriv, algorithm } });
+      assert.equal(invalidKey.isError, true);
+      // Verify independently produced P1363 signatures; a DER signature is not JWS.
+      const raw = cryptoSign(hash, Buffer.from(decoded.signing_input), { key: keys.privateKey, dsaEncoding: "ieee-p1363" });
+      assert.equal(verifyJwt(`${decoded.signing_input}.${base64urlEncode(raw)}`, pub, algorithm, { now: NOW }).valid, true);
+      const der = cryptoSign(hash, Buffer.from(decoded.signing_input), keys.privateKey);
+      assert.equal(verifyJwt(`${decoded.signing_input}.${base64urlEncode(der)}`, pub, algorithm, { now: NOW }).signature_valid, false);
+    } finally {
+      await close();
+    }
+  });
+}
 
 test("lists the three tools", async () => {
   const { client, close } = await connected();
