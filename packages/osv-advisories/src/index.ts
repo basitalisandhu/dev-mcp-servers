@@ -106,7 +106,7 @@ export function createServer(options: OsvClientOptions = {}): McpServer {
       title: "Scan a lockfile against OSV",
       description:
         "Parse a lockfile and batch-query OSV for every exactly pinned dependency in it. Supported formats: package-lock.json (lockfileVersion 1 to 3), " +
-        "requirements.txt (only == pins are queried; other specifiers are listed as skipped), poetry.lock and go.sum (basic: every module line, leading v removed). " +
+        "requirements.txt (only == pins are queried; other specifiers are listed as skipped), poetry.lock, go.sum (basic: every module line, leading v removed), Cargo.lock (registry packages only) and Gemfile.lock (GEM specs only). " +
         `Supply either path (a local file up to ${MAX_LOCKFILE_BYTES} bytes) or content (the file text). Format is detected from the file name and content unless given. ` +
         "Returns the packages with advisories, the ids per package, the skipped entries and counts. With include_details, fetches up to 20 advisories in full.",
       inputSchema: {

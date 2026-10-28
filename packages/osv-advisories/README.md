@@ -10,7 +10,7 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 |---|---|---|
 | `query_package` | `ecosystem`, `name`, `version?` | Full advisories for one package: ids, aliases (CVE), summary, severity, affected ranges, fixed versions, references. POST `/v1/query`, up to five pages. |
 | `query_batch` | `packages[]` (up to 1000) | Advisory ids per package. POST `/v1/querybatch` in chunks of 100. |
-| `scan_lockfile` | `path` or `content`, `filename?`, `format?`, `include_details?` | Parses `package-lock.json` (v1 to v3), `requirements.txt` (`==` pins only), `poetry.lock` or `go.sum` (basic) and batch-queries every pinned package; lists skipped entries. Reads one local file up to 10 MB. |
+| `scan_lockfile` | `path` or `content`, `filename?`, `format?`, `include_details?` | Parses `package-lock.json` (v1 to v3), `requirements.txt` (`==` pins only), `poetry.lock`, `go.sum` (basic), `Cargo.lock` (`cargo`) or `Gemfile.lock` (`gemfile`) and batch-queries every pinned package; lists skipped entries. Reads one local file up to 10 MB. |
 | `get_vulnerability` | `id` | One advisory in full. GET `/v1/vulns/{id}`. |
 
 ## Install
@@ -46,6 +46,7 @@ Pin the version as shown so that an update cannot change what runs in your edito
 
 - Ecosystem names are matched case-insensitively against the OSV list and normalised (`pypi` becomes `PyPI`); unknown names are an error rather than an empty result.
 - For Go modules the leading `v` is stripped from versions, as OSV expects.
+- Cargo registry pins use `crates.io`; path/workspace and git packages are reported as skipped. Gemfile `GEM` specs use `RubyGems`; `GIT` and `PATH` specs are reported as skipped, dependency constraints are not queried, and platform suffixes on native gems are removed. These are parsers for generated lockfiles, not general TOML or Ruby parsers.
 - An empty result means OSV has no advisory for that exact package and version; it does not prove the package is safe.
 
 ## Build and test
