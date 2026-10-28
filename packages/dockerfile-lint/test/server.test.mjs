@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, writeFile, rm, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -53,6 +53,61 @@ async function connected() {
   return { client, close: async () => { await client.close(); await server.close(); } };
 }
 const parse = (r) => JSON.parse(r.content[0].text);
+
+test("lint_dockerfile accounts for sibling and inline dockerignore with conservative negation", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "dl-ignore-"));
+  const file = join(dir, "Dockerfile");
+  const content = "FROM scratch\nCOPY . /app\nUSER 1000\n";
+  const safe = "# sensitive roots\n.git\n.env*\nnode_modules\n";
+  const { client, close } = await connected();
+  const finding = (r) => parse(r).findings.find((f) => f.rule === "copy-whole-context");
+  try {
+    await writeFile(file, content);
+    assert.ok(finding(await client.callTool({ name: "lint_dockerfile", arguments: { path: file } })), "missing ignore warns");
+    await writeFile(join(dir, ".dockerignore"), safe);
+    assert.equal(finding(await client.callTool({ name: "lint_dockerfile", arguments: { path: file } })), undefined);
+    assert.ok(finding(await client.callTool({ name: "lint_dockerfile", arguments: { content } })), "inline never reads filesystem ignores");
+    assert.equal(finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore: safe } })), undefined);
+    for (const [ignore, exposed] of [
+      [".git\nnode_modules\n", ".env"],
+      [`${safe}!.env\n`, ".env"],
+      [`${safe}!.env.secret\n`, ".env"],
+      [`${safe}!.git/private/config\n`, ".git"],
+      [`${safe}!node_modules/private/index.js\n`, "node_modules"],
+      [".git\n.env*[!z]\nnode_modules\n", ".env"],
+    ]) {
+      const f = finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore: ignore } }));
+      assert.ok(f, ignore);
+      assert.ok(f.message.includes(exposed), f.message);
+    }
+    for (const ignore of [
+      "*.tmp\n.git\n.env*\nnode_modules\n",
+      "/.git/\n/.env*\n/node_modules/\n",
+      ".git\n.env\nnode_modules\n",
+      "**/.git\n**/.env*\n**/node_modules\n",
+      ".g*t\n.e*\nnode_*\n",
+      `${safe}!.env.secret\n.env*\n`,
+      "**\n!src/**\n",
+    ]) assert.equal(finding(await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore: ignore } })), undefined, ignore);
+    const overridden = finding(await client.callTool({ name: "lint_dockerfile", arguments: { path: file, dockerignore: "" } }));
+    assert.ok(overridden, "explicit inline input overrides sibling");
+    await rm(join(dir, ".dockerignore"));
+    const oversizedInline = await client.callTool({ name: "lint_dockerfile", arguments: { content, dockerignore: "é".repeat(40000) } });
+    assert.equal(oversizedInline.isError, true);
+    assert.match(oversizedInline.content[0].text, /exceeds/);
+    await writeFile(join(dir, ".dockerignore"), "#".repeat(64 * 1024 + 1));
+    const oversized = await client.callTool({ name: "lint_dockerfile", arguments: { path: file } });
+    assert.equal(oversized.isError, true);
+    assert.match(oversized.content[0].text, /exceeds/);
+    await rm(join(dir, ".dockerignore"));
+    await mkdir(join(dir, ".dockerignore"));
+    const invalid = await client.callTool({ name: "lint_dockerfile", arguments: { path: file } });
+    assert.equal(invalid.isError, true, "read errors other than ENOENT must not be hidden");
+  } finally {
+    await close();
+    await rm(dir, { recursive: true, force: true });
+  }
+});
 
 test("lists the three tools", async () => {
   const { client, close } = await connected();
