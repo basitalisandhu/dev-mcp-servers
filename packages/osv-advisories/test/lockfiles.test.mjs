@@ -98,3 +98,55 @@ test("package-lock v1 dependencies tree is walked", () => {
   assert.equal(v1.skipped[0].entry, "c");
   assert.throws(() => parseLockfile("{", "package-lock"), /not valid JSON/);
 });
+
+const UV = `version = 1
+revision = 2
+requires-python = ">=3.11"
+
+[[package]]
+name = "Requests_Toolbelt"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/x.tar.gz", hash = "sha256:00", size = 1 }
+
+[package.optional-dependencies]
+socks = [
+    { name = "pysocks" },
+]
+
+[[package]]
+name = "my-app"
+version = "0.1.0"
+source = { editable = "." }
+
+[[package]]
+name = "workspace-root"
+source = { virtual = "." }
+
+[[package]]
+name = "from-git"
+version = "2.0.0"
+source = { git = "https://example.com/repo?rev=abc#abc" }
+`;
+
+test("detects uv.lock by name and by content, not as Cargo.lock", () => {
+  assert.equal(detectFormat("/x/uv.lock", ""), "uv");
+  assert.equal(detectFormat(undefined, UV), "uv");
+  assert.equal(detectFormat(undefined, CARGO), "cargo");
+});
+
+test("uv.lock returns registry pins and explains editable, virtual and git packages", () => {
+  const result = parseLockfile(UV, "uv");
+  assert.deepEqual(result.packages, [{ ecosystem: "PyPI", name: "requests-toolbelt", version: "1.0.0" }]);
+  assert.deepEqual(
+    result.skipped.map((s) => [s.entry, s.reason]),
+    [
+      ["my-app", "editable source, not a registry pin"],
+      ["workspace-root", "package without a version (a virtual or editable project)"],
+      ["from-git", "git source, not a registry pin"],
+    ],
+  );
+});

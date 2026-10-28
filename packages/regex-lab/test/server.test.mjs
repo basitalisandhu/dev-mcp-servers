@@ -122,3 +122,10 @@ test("parser and heuristics on their own", async () => {
   const run = await runRegex("a", "", ["a"], { timeoutMs: 500 });
   assert.equal(run.results[0].matched, true);
 });
+
+test("runs regexes when the host process was started with --input-type=module", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const runner = new URL("../dist/runner.js", import.meta.url).href;
+  const out = execFileSync(process.execPath, ["--input-type=module", "-e", `const { runRegex } = await import(${JSON.stringify(runner)}); const r = await runRegex("a+", "", ["caaat"]); console.log(JSON.stringify(r.results[0].matches.length));`], { encoding: "utf8" });
+  assert.equal(out.trim(), "1");
+});

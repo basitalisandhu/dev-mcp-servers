@@ -4,7 +4,14 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-28
+
 ### Added
+
+- osv-advisories scans `uv.lock` (format `uv`): registry packages are queried as PyPI pins; editable, virtual, path, git and URL packages are listed as skipped. A uv.lock pasted as content was detected as Cargo.lock before (both start with `version = 1`) and every package was skipped.
+- `scripts/fuzz.test.mjs`: seeded mutations of valid input through every parser (cron, Dockerfile, .dockerignore, JWT, regex, OpenAPI, every lockfile format, sitemap, llms.txt, JSON Schema, security headers), generated arguments for every offline tool over MCP, and a scaling test at ten times the usual input (every parser 0.05 s or less on 28 October 2026; already linear). Part of `npm test`.
+- `scripts/e2e-quickstart.sh` (`npm run e2e`): the README "run from a checkout" quick start on a fresh clone, every server started over stdio and the `decode_jwt` sample checked, then jwt-tools from its packed tarball. CI runs it.
+- README: Troubleshooting section with real messages and their fixes.
 
 - openapi-lint rules for query-string API keys, HTTP Basic authentication and operations without documented error responses (#9).
 - osv-advisories scans Cargo.lock registry pins and Gemfile.lock GEM specs, with format detection and explicit skipped-source reasons (#4).
@@ -12,6 +19,8 @@ All notable changes to this project are documented here. The format follows Keep
 
 ### Fixed
 
+- jwt-tools: a time claim outside the range a JavaScript date can hold (for example `"exp": -1e20`) made `decode_jwt` and `verify_jwt` fail with `RangeError: Invalid time value`; the time is now shown as out of range and the other findings are reported. Found by the fuzz test.
+- regex-lab: a host process started with `--input-type=module` made every `test_regex` and `check_redos` run fail with `require is not defined in ES module scope`, because the worker inherited the flag; it is now removed for the worker.
 - dockerfile-lint considers sibling or inline .dockerignore rules before warning about sensitive roots in a whole-context COPY, conservatively preserving warnings for negations (#8).
 - security-headers warns and removes Permissions-Policy points when sensitive features allow every origin with `*` (#5).
 

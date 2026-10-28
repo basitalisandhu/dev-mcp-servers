@@ -97,7 +97,13 @@ main();
 function spawn(data: Record<string, unknown>, timeoutMs: number, onMessage: (msg: Record<string, unknown>) => void): Promise<{ timedOut: boolean; error?: string; elapsed: number }> {
   const started = Date.now();
   return new Promise((resolve) => {
-    const worker = new Worker(WORKER_SOURCE, { eval: true, workerData: data, resourceLimits: { maxOldGenerationSizeMb: 256, maxYoungGenerationSizeMb: 64 } });
+    // The worker source is CommonJS. A worker inherits the parent's execArgv, so a host
+    // process started with --input-type=module made every regex run fail with "require is
+    // not defined in ES module scope". Only then is execArgv passed, without that flag;
+    // otherwise the default inheritance stays (an explicit list is validated strictly).
+    const moduleType = (arg: string) => arg.startsWith("--input-type") || arg.startsWith("--experimental-default-type");
+    const execArgv = process.execArgv.some(moduleType) ? process.execArgv.filter((arg) => !moduleType(arg)) : undefined;
+    const worker = new Worker(WORKER_SOURCE, { eval: true, execArgv, workerData: data, resourceLimits: { maxOldGenerationSizeMb: 256, maxYoungGenerationSizeMb: 64 } });
     let settled = false;
     const finish = (out: { timedOut: boolean; error?: string }) => {
       if (settled) return;

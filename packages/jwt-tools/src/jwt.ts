@@ -75,7 +75,11 @@ function asSeconds(value: unknown): number | undefined {
 }
 
 export function iso(seconds: number): string {
-  return new Date(seconds * 1000).toISOString();
+  const date = new Date(seconds * 1000);
+  // A claim such as exp: -1e20 is a valid JSON number but outside the range a Date can
+  // hold; toISOString() then threw "Invalid time value" and the whole decode failed.
+  if (Number.isNaN(date.getTime())) return `out of range (${seconds} s from 1970)`;
+  return date.toISOString();
 }
 
 function humanDuration(seconds: number): string {
