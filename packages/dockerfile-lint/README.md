@@ -14,10 +14,6 @@ Part of [dev-mcp-servers](https://github.com/basitalisandhu/dev-mcp-servers). St
 
 ## Install
 
-With `path`, `lint_dockerfile` reads `.dockerignore` beside the Dockerfile (up to 64 KB). Supply `dockerignore` to override it, or when using inline Dockerfile content; inline input never reads ignore files from the working directory. Missing ignore files preserve the warning; other read errors are returned.
-
-The `copy-whole-context` rule reports uncovered root patterns `.git`, `.env` (or `.env*`) and `node_modules`, and is suppressed only when all are covered. The dependency-free matcher supports exact names, `*` within a segment, `**`, leading/trailing slashes, comments and ordered `!` negations. This is conservative root-pattern analysis, not a directory walk or full Docker matcher: uncertain wildcard negations retain the warning, nested build contexts are not inferred, and suppressing this finding does not certify that the context contains no secrets. Prefer `.env*` to cover environment-specific files as well as `.env`.
-
 Claude Code:
 
 ```bash
@@ -47,6 +43,8 @@ Pin the version as shown so that an update cannot change what runs in your edito
 
 ## Notes
 
+- With `path`, `lint_dockerfile` reads `.dockerignore` beside the Dockerfile (up to 64 KB). Supply `dockerignore` to override it, or when using inline Dockerfile content; inline input never reads ignore files from the working directory. Missing ignore files preserve the warning; other read errors are returned.
+- The `copy-whole-context` rule reports uncovered root patterns `.git`, `.env` (or `.env*`) and `node_modules`, and is suppressed only when all are covered. The dependency-free matcher supports exact names, `*` within a segment, `**`, leading/trailing slashes, comments and ordered `!` negations. This is conservative root-pattern analysis, not a directory walk or full Docker matcher: uncertain wildcard negations retain the warning, nested build contexts are not inferred, and suppressing this finding does not certify that the context contains no secrets. Prefer `.env*` to cover environment-specific files as well as `.env`.
 - `FROM $ARG` bases are checked against the declared `ARG`s; `scratch` and stage references are exempt from tag checks.
 - Rules are heuristics on the text; a clean result does not scan the image's packages.
 
