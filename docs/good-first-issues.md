@@ -75,3 +75,36 @@ To claim one, open an issue with the title below (or comment on the existing one
 - New rule `operation-no-error-response` (info) for operations whose responses contain no `4xx`, `5xx` or `default` entry.
 - Entries in `RULES` with descriptions and fixes; the fixture `test/fixtures/petstore.yaml` gains a query API key and the tests assert all three rules, including that `ignore` silences them.
 - README tool description and `CHANGELOG.md` updated.
+
+## 7. osv-advisories: parse pnpm-lock.yaml
+
+**Labels:** good first issue, osv-advisories
+
+**Context.** `packages/osv-advisories/src/lockfiles.ts` reads npm, pip, Poetry, uv, Go, Cargo and Bundler lockfiles but not pnpm's. In `pnpm-lock.yaml` (lockfileVersion 9) every resolved package is a key under `packages:` such as `  /lodash@4.17.21:` or `  '@scope/name@1.2.3':`, which is enough for an npm pin.
+
+**Acceptance criteria.**
+- `LOCKFILE_FORMATS` gains `pnpm`; `detectFormat` recognises `pnpm-lock.yaml` and content starting with `lockfileVersion:`.
+- `parseLockfile` returns `npm` pins for registry packages and lists `link:`, `file:` and git entries as skipped with a reason, without adding a YAML dependency (line-based parsing like the other formats).
+- Tests in `test/lockfiles.test.mjs` with a short fixture; the `scan_lockfile` description, the package README and `CHANGELOG.md` list the format.
+
+## 8. osv-advisories: parse yarn.lock (classic, v1)
+
+**Labels:** good first issue, osv-advisories
+
+**Context.** A Yarn 1 `yarn.lock` has blocks like `lodash@^4.17.0, lodash@^4.17.21:` followed by an indented `  version "4.17.21"`. The name is the part before the last `@` of the first selector.
+
+**Acceptance criteria.**
+- `LOCKFILE_FORMATS` gains `yarn`; `detectFormat` recognises `yarn.lock` and the `# yarn lockfile v1` header.
+- `parseLockfile` returns `npm` pins, handles scoped names (`"@babel/core@^7.0.0":`) and lists `file:`, `link:` and git resolutions as skipped.
+- Tests in `test/lockfiles.test.mjs`; the description, README and `CHANGELOG.md` updated.
+
+## 9. dockerfile-lint: flag `curl | sh` in RUN
+
+**Labels:** good first issue, dockerfile-lint
+
+**Context.** `RUN curl -fsSL https://example.com/install.sh | sh` runs whatever the server returns at build time, with no checksum. `packages/dockerfile-lint/src/dockerfile.ts` already checks RUN instructions for credential literals and apt cleanup.
+
+**Acceptance criteria.**
+- A new rule `pipe-to-shell` (severity warning) for a RUN whose command pipes `curl` or `wget` output into `sh`, `bash`, `zsh` or `python`, including across `\` line continuations.
+- `explain_rule` describes it and suggests downloading to a file and checking a SHA-256 before running it.
+- Tests for a positive case, a case with a checksum step between download and run that is not flagged, and the `ignore` option; README rule table and `CHANGELOG.md` updated.

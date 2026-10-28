@@ -174,3 +174,17 @@ test("sign_test_jwt produces tokens that decode and verify", async () => {
     await close();
   }
 });
+
+test("decode_jwt reports time claims outside the Date range instead of failing", async () => {
+  const { client, close } = await connected();
+  try {
+    const token = `${base64urlEncode(JSON.stringify({ alg: "none" }))}.${base64urlEncode(JSON.stringify({ exp: -1e20, nbf: 1e300 }))}.`;
+    const result = await client.callTool({ name: "decode_jwt", arguments: { token, now: NOW } });
+    assert.notEqual(result.isError, true, result.content[0].text);
+    const r = parse(result);
+    assert.match(r.times.exp, /^out of range \(-100000000000000000000 s from 1970\)$/);
+    assert.ok(codes(r).includes("expired"));
+  } finally {
+    await close();
+  }
+});

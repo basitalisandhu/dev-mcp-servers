@@ -15,7 +15,7 @@ import { MAX_DOCKERFILE_BYTES, RULES, lint, parseDockerfile } from "./dockerfile
 import { MAX_DOCKERIGNORE_BYTES } from "./dockerignore.js";
 
 export const SERVER_NAME = "dockerfile-lint";
-export const SERVER_VERSION = "0.2.2";
+export const SERVER_VERSION = "0.3.0";
 
 function json(value: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(value, null, 1) }] };
